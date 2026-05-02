@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/Services/">
+    <File Path="AutenticacionService.cs" />
+    <File Path="CarritoService.cs" />
+  </Folder>
+  <Project Path="../FerreApp.Core/FerreApp.Core.csproj" />
+  <Project Path="../FerreApp.Data/FerreApp.Data.csproj" />
+  <Project Path="FerreAppLaVarilla.UI.csproj">
+    <BuildDependency Project="../FerreApp.Core/FerreApp.Core.csproj" />
+    <BuildDependency Project="../FerreApp.Data/FerreApp.Data.csproj" />
+  </Project>
+</Solution>

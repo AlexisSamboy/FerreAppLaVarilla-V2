@@ -1,0 +1,395 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components
+
+<PageTitle>FerreAppLaVarilla - Inicio</PageTitle>
+
+<div class="main-container">
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="logo">
+            <span class="icon">⚡</span>
+            <span class="brand">
+                FerreApp<span class="highlight">LaVarilla</span>
+            </span>
+        </div>
+
+        <nav class="menu">
+            <a href="/">Inicio</a>
+            <a href="/productos">Productos</a>
+            <a href="#">Ofertas</a>
+            <a href="#">Nosotros</a>
+            <a href="#">Contacto</a>
+        </nav>
+
+        <div class="actions">
+            <button class="login-btn">Iniciar sesión</button>
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="hero-text">
+            <h1>
+                Todo para tus <span>proyectos</span>, en un solo lugar.
+            </h1>
+
+            <p>
+                Encuentra herramientas, materiales de construcción,
+                tornillería, pinturas y mucho más.
+            </p>
+
+            <button class="primary-btn">
+                Ver productos
+            </button>
+        </div>
+
+        <div class="hero-image">
+            <img src="images/ferreapp.png" alt="FerreApp La Varilla" />
+        </div>
+    </section>
+
+    <!-- NUESTRAS INSTALACIONES -->
+    <section class="installations">
+
+        <div class="section-title">
+            <h2>Nuestras Instalaciones</h2>
+            <p>
+                Conoce nuestra ferretería, amplios espacios,
+                atención personalizada y productos disponibles
+                para todos tus proyectos.
+            </p>
+        </div>
+
+        <div class="installation-gallery">
+
+            <div class="installation-card">
+                <img src="images/area de caja.png" alt="Instalación 1" />
+            </div>
+
+            <div class="installation-card">
+                <img src="images/ferreapp la varilla.png" alt="Instalación 2" />
+            </div>
+
+            <div class="installation-card">
+                <img src="images/ubicacion.png" alt="Instalación 3" />
+            </div>
+
+            <div class="installation-card">
+                <img src="images/pasillos.png" alt="Instalación 4" />
+            </div>
+
+        </div>
+
+    </section>
+    <!-- BENEFITS -->
+    <section class="benefits">
+
+        <div class="card">
+            <h3>🚚 Envíos rápidos</h3>
+            <p>Recibe tus pedidos en la puerta de tu hogar o negocio.</p>
+        </div>
+
+        <div class="card">
+            <h3>🛡️ Productos de calidad</h3>
+            <p>Trabajamos con las mejores marcas del mercado.</p>
+        </div>
+
+        <div class="card">
+            <h3>🎧 Atención personalizada</h3>
+            <p>Nuestro equipo está listo para ayudarte.</p>
+        </div>
+
+    </section>
+
+    <!-- CATEGORIAS -->
+    <section class="categories">
+
+        <div class="section-title">
+            <h2>Categorías destacadas</h2>
+            <a href="#">Ver todas</a>
+        </div>
+
+        <div class="category-grid">
+
+            <div class="category-card">
+                <img src="images/herramientas-hogar.png" />
+                <p>Herramientas</p>
+            </div>
+
+            <div class="category-card">
+                <img src="images/materiales.jpg" />
+                <p>Materiales</p>
+            </div>
+
+            <div class="category-card">
+                <img src="images/tornillos.png" />
+                <p>Tornillería</p>
+            </div>
+
+            <div class="category-card">
+                <img src="images/pintura.png" />
+                <p>Pinturas</p>
+            </div>
+
+            <div class="category-card">
+                <img src="images/alambre.png" />
+                <p>Electricidad</p>
+            </div>
+
+            <div class="category-card">
+                <img src="images/plomeria.png" />
+                <p>Plomería</p>
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI';
+    }
+
+    body {
+        background: #f5f7fa;
+    }
+
+    .main-container {
+        width: 100%;
+    }
+
+    /* NAVBAR */
+
+    .navbar {
+        background: #0d1b2a;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 60px;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .icon {
+        margin-right: 10px;
+    }
+
+    .highlight {
+        color: #f4b400;
+    }
+
+    .menu {
+        display: flex;
+        gap: 30px;
+    }
+
+        .menu a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+    .login-btn {
+        background: #f4b400;
+        color: #000;
+        border: none;
+        padding: 12px 22px;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    /* HERO */
+
+    .hero {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 70px 60px;
+        background: white;
+    }
+
+    .hero-text {
+        width: 45%;
+    }
+
+        .hero-text h1 {
+            font-size: 52px;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            color: #0d1b2a;
+        }
+
+            .hero-text h1 span {
+                color: #f4b400;
+            }
+
+        .hero-text p {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 30px;
+        }
+
+    .primary-btn {
+        background: #f4b400;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .hero-image {
+        width: 50%;
+    }
+
+        .hero-image img {
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.1);
+        }
+
+    /* BENEFITS */
+
+    .benefits {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 25px;
+        padding: 40px 60px;
+    }
+
+    .card {
+        background: white;
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0 5px 20px rgba(0,0,0,.05);
+    }
+
+        .card h3 {
+            margin-bottom: 12px;
+            color: #0d1b2a;
+        }
+
+        .card p {
+            color: #666;
+        }
+
+    /* CATEGORIES */
+
+    .categories {
+        padding: 20px 60px 80px;
+    }
+
+    .section-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+        .section-title h2 {
+            color: #0d1b2a;
+        }
+
+        .section-title a {
+            text-decoration: none;
+            color: #0d1b2a;
+            font-weight: bold;
+        }
+
+    .category-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 20px;
+    }
+
+    .category-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 5px 20px rgba(0,0,0,.05);
+        transition: .3s;
+    }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .category-card img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin-bottom: 15px;
+        }
+
+        .category-card p {
+            font-weight: 600;
+            color: #333;
+        }
+
+    .installations {
+        padding: 30px 60px 60px;
+        background: #f8fafc;
+    }
+
+        .installations .section-title {
+            text-align: center;
+            margin-bottom: 35px;
+            display: block;
+        }
+
+            .installations .section-title h2 {
+                font-size: 36px;
+                color: #0d1b2a;
+                margin-bottom: 12px;
+            }
+
+            .installations .section-title p {
+                max-width: 700px;
+                margin: auto;
+                color: #666;
+                font-size: 17px;
+                line-height: 1.6;
+            }
+
+    .installation-gallery {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
+    }
+
+    .installation-card {
+        background: white;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 8px 25px rgba(0,0,0,.06);
+        transition: 0.3s;
+    }
+
+        .installation-card:hover {
+            transform: translateY(-6px);
+        }
+
+        .installation-card img {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            display: block;
+        }
+
+    Select 4 more words to run Humanizer.
+</style>
