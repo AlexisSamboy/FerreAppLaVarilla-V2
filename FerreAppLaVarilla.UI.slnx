@@ -3,11 +3,5 @@
     <File Path="AutenticacionService.cs" />
     <File Path="CarritoService.cs" />
   </Folder>
-  <Project Path="../FerreApp.Core/FerreApp.Core.csproj" />
-  <Project Path="../FerreApp.Data/FerreApp.Data.csproj" />
-  <Project Path="../FerretApp_Core/FerretApp_Core.csproj" Id="2b17a7cb-e777-4249-906c-b8d1c4d0358b" />
-  <Project Path="FerreAppLaVarilla.UI.csproj">
-    <BuildDependency Project="../FerreApp.Core/FerreApp.Core.csproj" />
-    <BuildDependency Project="../FerreApp.Data/FerreApp.Data.csproj" />
-  </Project>
+  <Project Path="FerreAppLaVarilla.UI.csproj" />
 </Solution>

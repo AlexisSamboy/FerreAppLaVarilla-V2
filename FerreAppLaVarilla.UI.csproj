@@ -15,11 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Data\" />
     <Folder Include="wwwroot\images\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\FerretApp_Core\FerretApp_Core.csproj" />
   </ItemGroup>
 
 </Project>
