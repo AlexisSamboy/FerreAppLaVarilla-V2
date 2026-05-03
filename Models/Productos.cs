@@ -1,9 +1,11 @@
-﻿namespace FerreAppLaVarilla.UI.Models
-{
-    public class Producto
+﻿    namespace FerreAppLaVarilla.UI.Models
     {
-        public int Id { get; set; }
-        public string Nombre { get; set; } = string.Empty;
-        public decimal Precio { get; set; }
+        public class Producto
+        {
+            public int Id { get; set; } 
+            public required string Nombre { get; set; }
+            public required string Descripcion { get; set; }
+            public decimal Precio { get; set; }
+            public int Stock { get; set; }
+        }
     }
-}
