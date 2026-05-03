@@ -1,9 +1,10 @@
 using FerreAppLaVarilla.UI.Components;
+using FerreAppLaVarilla.UI.Data;
+
 // ⬇️ Estos son tus namespaces correctos
 using FerreAppLaVarilla.UI.Services;
 using Microsoft.AspNetCore.Authentication;
-//using Microsoft.EntityFrameworkCore;
-// using FerreAppLaVarilla.Data; // Descomenta esta línea si tu proyecto de datos se llama así
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,12 +15,10 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 // ====================================================================
-// 2. CONEXIÓN A SQL SERVER (Solo si ya creaste el DbContext)
+// 2. CONEXIÓN A SQL SERVER
 // ====================================================================
-/*
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=FerreAppLaVarilla;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;"));
-*/
 
 // ====================================================================
 // 3. SERVICIOS DEL CARRITO Y AUTENTICACIÓN
