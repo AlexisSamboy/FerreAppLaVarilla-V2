@@ -95,10 +95,25 @@
                         <p class="brand">Categoría Básica</p>
 
                         <p class="price">RD$ @producto.Precio.ToString("N2")</p>
+                        <p style="font-size: 13px; color: #555; margin-bottom: 10px;">@producto.Descripcion</p>
 
-                        <button class="detail-btn">
-                            Ver detalle
-                        </button>
+                        <AuthorizeView Roles="Admin">
+                            <Authorized>
+                                <button class="detail-btn" style="background: #e63946;">Editar Producto</button>
+                            </Authorized>
+                        </AuthorizeView>
+
+                        <AuthorizeView Roles="Cliente">
+                            <Authorized>
+                                <button class="detail-btn">Agregar al Carrito</button>
+                            </Authorized>
+                        </AuthorizeView>
+
+                        <AuthorizeView>
+                            <NotAuthorized>
+                                <button class="detail-btn" style="background: #777;">Ver detalle</button>
+                            </NotAuthorized>
+                        </AuthorizeView>
 
                     </div>
                 }

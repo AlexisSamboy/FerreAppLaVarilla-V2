@@ -1,11 +1,13 @@
 ﻿@page "/"
+@rendermode InteractiveServer
 @using Microsoft.AspNetCore.Components
+@inject FerreAppLaVarilla.UI.Services.AutenticacionService AuthService
+@inject NavigationManager Navigation
 
 <PageTitle>FerreAppLaVarilla - Inicio</PageTitle>
 
 <div class="main-container">
 
-    <!-- NAVBAR -->
     <header class="navbar">
         <div class="logo">
             <span class="icon">⚡</span>
@@ -17,17 +19,37 @@
         <nav class="menu">
             <a href="/">Inicio</a>
             <a href="/productos">Productos</a>
-            <a href="#">Ofertas</a>
-            <a href="#">Nosotros</a>
-            <a href="#">Contacto</a>
+            
+            <AuthorizeView Roles="Admin">
+                <Authorized>
+                    <a href="/panel-admin" style="color: #f4b400;">⚙️ Panel Admin</a>
+                </Authorized>
+            </AuthorizeView>
+
+            <AuthorizeView Roles="Cliente">
+                <Authorized>
+                    <a href="#">🛒 Mi Carrito</a>
+                </Authorized>
+            </AuthorizeView>
         </nav>
 
         <div class="actions">
-            <button class="login-btn">Iniciar sesión</button>
+            <AuthorizeView>
+                <Authorized>
+                    <span style="color: white; margin-right: 15px; font-weight: bold;">
+                        👤 Hola, @context.User.Identity?.Name
+                    </span>
+                    <button class="login-btn" style="background: #e63946; color: white;" @onclick="CerrarSesion">
+                        Cerrar sesión
+                    </button>
+                </Authorized>
+                <NotAuthorized>
+                    <button class="login-btn" @onclick="IrALogin">Iniciar sesión</button>
+                </NotAuthorized>
+            </AuthorizeView>
         </div>
     </header>
 
-    <!-- HERO SECTION -->
     <section class="hero">
         <div class="hero-text">
             <h1>
@@ -49,7 +71,6 @@
         </div>
     </section>
 
-    <!-- NUESTRAS INSTALACIONES -->
     <section class="installations">
 
         <div class="section-title">
@@ -82,7 +103,7 @@
         </div>
 
     </section>
-    <!-- BENEFITS -->
+
     <section class="benefits">
 
         <div class="card">
@@ -102,7 +123,6 @@
 
     </section>
 
-    <!-- CATEGORIAS -->
     <section class="categories">
 
         <div class="section-title">
@@ -145,8 +165,25 @@
         </div>
 
     </section>
-
 </div>
+
+@code {
+    private void IrAProductos()
+    {
+        Navigation.NavigateTo("productos");
+    }
+
+    private void IrALogin()
+    {
+        Navigation.NavigateTo("login");
+    }
+
+    private void CerrarSesion()
+    {
+        AuthService.CerrarSesion();
+        Navigation.NavigateTo("/"); 
+    }
+}
 
 <style>
     * {
@@ -390,6 +427,4 @@
             object-fit: cover;
             display: block;
         }
-
-    Select 4 more words to run Humanizer.
 </style>

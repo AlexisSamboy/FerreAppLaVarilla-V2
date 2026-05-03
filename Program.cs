@@ -4,6 +4,7 @@ using FerreAppLaVarilla.UI.Data;
 // ⬇️ Estos son tus namespaces correctos
 using FerreAppLaVarilla.UI.Services;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,17 @@ var builder = WebApplication.CreateBuilder(args);
 // ====================================================================
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// ====================================================================
+// 1.1 AUTENTICACIÓN
+// ====================================================================
+
+// 1. Registramos la clase concreta
+builder.Services.AddScoped<FerreAppLaVarilla.UI.Services.AutenticacionService>();
+
+// 2. Le decimos a Blazor que use esa misma clase para la seguridad del sistema
+builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
+    sp.GetRequiredService<FerreAppLaVarilla.UI.Services.AutenticacionService>());
 
 // ====================================================================
 // 2. CONEXIÓN A SQL SERVER
