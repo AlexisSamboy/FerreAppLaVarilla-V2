@@ -7,5 +7,8 @@
             public required string Descripcion { get; set; }
             public decimal Precio { get; set; }
             public int Stock { get; set; }
+
+        // Guardará el nombre del archivo de la foto (ej. "taladro.png")
+            public string ImagenUrl { get; set; } = "default.png";
         }
     }

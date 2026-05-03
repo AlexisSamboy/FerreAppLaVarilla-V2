@@ -2,6 +2,7 @@
   <Folder Name="/Services/">
     <File Path="AutenticacionService.cs" />
     <File Path="CarritoService.cs" />
+    <File Path="ProductoService.cs" />
   </Folder>
   <Project Path="FerreAppLaVarilla.UI.csproj" />
 </Solution>

@@ -1,10 +1,12 @@
 ﻿@page "/productos"
 @rendermode InteractiveServer
+@using FerreAppLaVarilla.UI.Models
+@inject FerreAppLaVarilla.UI.Services.ProductoService ProductoService
+
 <PageTitle>Productos - FerreAppLaVarilla</PageTitle>
 
 <div class="products-page">
 
-    <!-- SIDEBAR -->
     <aside class="sidebar">
 
         <div class="logo">
@@ -16,8 +18,8 @@
 
         <nav class="sidebar-menu">
 
-            <a href="#" class="menu-item active">🏠 Inicio</a>
-            <a href="#" class="menu-item">📦 Productos</a>
+            <a href="/" class="menu-item">🏠 Inicio</a>
+            <a href="productos" class="menu-item active">📦 Productos</a>
             <a href="#" class="menu-item">📂 Categorías</a>
             <a href="#" class="menu-item">🔥 Ofertas</a>
             <a href="#" class="menu-item">
@@ -33,10 +35,8 @@
 
     </aside>
 
-    <!-- CONTENT -->
     <main class="content">
 
-        <!-- TOPBAR -->
         <header class="topbar">
             <div class="menu-icon">☰</div>
 
@@ -47,10 +47,8 @@
             </div>
         </header>
 
-        <!-- TITLE -->
         <h2 class="page-title">Productos</h2>
 
-        <!-- FILTERS -->
         <section class="filters">
 
             <input type="text"
@@ -71,35 +69,57 @@
 
         </section>
 
-        <!-- PRODUCT GRID -->
         <section class="product-grid">
 
-            @for (int i = 0; i < 8; i++)
+            @if (listaProductos == null)
             {
-                <div class="product-card">
+                <p><em>Cargando inventario desde la base de datos...</em></p>
+            }
+            else if (listaProductos.Count == 0)
+            {
+                <p><em>No hay productos registrados en la base de datos todavía.</em></p>
+            }
+            else
+            {
+                @foreach (var producto in listaProductos)
+                {
+                    <div class="product-card">
 
-                    <div class="favorite">♡</div>
+                        <div class="favorite">♡</div>
 
-                    <img src="images/taladro.png" alt="Producto" />
+                        @* Podremos hacer la imagen dinámica luego. Por ahora dejamos esta de placeholder. *@
+                        <img src="images/@producto.ImagenUrl" alt="@producto.Nombre" onerror="this.src='images/default.png'" />
 
-                    <h4>Taladro Percutor 1/2"</h4>
+                        <h4>@producto.Nombre</h4>
 
-                    <p class="brand">DEWALT</p>
+                        <p class="brand">Categoría Básica</p>
 
-                    <p class="price">$1,250.00</p>
+                        <p class="price">RD$ @producto.Precio.ToString("N2")</p>
 
-                    <button class="detail-btn">
-                        Ver detalle
-                    </button>
+                        <button class="detail-btn">
+                            Ver detalle
+                        </button>
 
-                </div>
+                    </div>
+                }
             }
 
         </section>
 
     </main>
-
 </div>
+
+@code {
+    // Variable para almacenar los productos que vienen de SQL Server
+    private List<Producto>? listaProductos;
+
+    // Este método se ejecuta automáticamente cuando la página carga
+    protected override async Task OnInitializedAsync()
+    {
+        // Llamamos al servicio para obtener la data real
+        listaProductos = await ProductoService.ObtenerProductosAsync();
+    }
+}
 
 <style>
     * {
