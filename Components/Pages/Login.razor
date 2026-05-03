@@ -99,7 +99,9 @@
     private void IniciarSesion()
     {
         // 1. Buscamos en la base de datos si hay un usuario con ese correo y clave
-        var usuario = DbContext.Usuarios.FirstOrDefault(u => u.Correo == correo && u.Clave == clave);
+        var usuario = DbContext.Usuarios.FirstOrDefault(
+    u => u.Correo == correo && u.Password == clave
+);
 
         if (usuario != null)
         {

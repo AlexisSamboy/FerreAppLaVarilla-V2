@@ -6,32 +6,57 @@ namespace FerreAppLaVarilla.UI.Services
 {
     public class AutenticacionService : AuthenticationStateProvider
     {
-        private ClaimsPrincipal _usuarioActual = new ClaimsPrincipal(new ClaimsIdentity());
+        private ClaimsPrincipal _usuarioActual =
+            new ClaimsPrincipal(new ClaimsIdentity());
+
+        // Propiedad para mostrar el nombre del usuario autenticado
+        public string NombreUsuario =>
+            _usuarioActual.Identity?.Name ?? "Invitado";
 
         public override Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            return Task.FromResult(new AuthenticationState(_usuarioActual));
+            return Task.FromResult(
+                new AuthenticationState(_usuarioActual)
+            );
         }
 
         public void MarcarUsuarioComoAutenticado(Usuario usuario)
         {
             var claims = new List<Claim>
             {
+                // IMPORTANTE:
+                // Aquí usamos Correo porque en tu modelo Usuario
+                // probablemente no existe la propiedad Nombre
                 new Claim(ClaimTypes.Name, usuario.Correo),
-                new Claim(ClaimTypes.Role, usuario.Rol)
+
+                // Si Rol puede venir null, protegemos con ?? ""
+                new Claim(ClaimTypes.Role, usuario.Rol ?? "")
             };
 
-            var identity = new ClaimsIdentity(claims, "FerreAppAuth");
+            var identity = new ClaimsIdentity(
+                claims,
+                "FerreAppAuth"
+            );
+
             _usuarioActual = new ClaimsPrincipal(identity);
 
-            // ¡CRUCIAL! Notificamos usando Task.FromResult para evitar desincronizaciones
-            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_usuarioActual)));
+            NotifyAuthenticationStateChanged(
+                Task.FromResult(
+                    new AuthenticationState(_usuarioActual)
+                )
+            );
         }
 
         public void CerrarSesion()
         {
-            _usuarioActual = new ClaimsPrincipal(new ClaimsIdentity());
-            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_usuarioActual)));
+            _usuarioActual =
+                new ClaimsPrincipal(new ClaimsIdentity());
+
+            NotifyAuthenticationStateChanged(
+                Task.FromResult(
+                    new AuthenticationState(_usuarioActual)
+                )
+            );
         }
     }
 }

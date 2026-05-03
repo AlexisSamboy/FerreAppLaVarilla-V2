@@ -23,213 +23,242 @@ namespace FerreAppLaVarilla.UI.Migrations
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("FerreAppLaVarilla.UI.Models.Camion", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<double>("CapacidadMaxima")
-                        .HasColumnType("float");
+                b.Property<double>("CapacidadMaxima")
+                    .HasColumnType("float");
 
-                    b.Property<string>("Descripcion")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Descripcion")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("Disponible")
-                        .HasColumnType("bit");
+                b.Property<bool>("Disponible")
+                    .HasColumnType("bit");
 
-                    b.Property<string>("Placa")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Placa")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.ToTable("Camiones");
-                });
+                b.ToTable("Camiones");
+            });
 
             modelBuilder.Entity("FerreAppLaVarilla.UI.Models.Cliente", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("CedulaRNC")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("CedulaRNC")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DireccionEntrega")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("DireccionEntrega")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("NombreCompleto")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("NombreCompleto")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Telefono")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Telefono")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.ToTable("Clientes");
-                });
+                b.ToTable("Clientes");
+            });
 
             modelBuilder.Entity("FerreAppLaVarilla.UI.Models.DetallePedido", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Cantidad")
-                        .HasColumnType("int");
+                b.Property<int>("Cantidad")
+                    .HasColumnType("int");
 
-                    b.Property<int?>("PedidoId")
-                        .HasColumnType("int");
+                b.Property<int?>("PedidoId")
+                    .HasColumnType("int");
 
-                    b.Property<decimal>("PrecioUnitario")
-                        .HasColumnType("decimal(18,2)");
+                b.Property<decimal>("PrecioUnitario")
+                    .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("ProductoId")
-                        .HasColumnType("int");
+                b.Property<int>("ProductoId")
+                    .HasColumnType("int");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("PedidoId");
+                b.HasIndex("PedidoId");
 
-                    b.HasIndex("ProductoId");
+                b.HasIndex("ProductoId");
 
-                    b.ToTable("DetallesPedido");
-                });
+                b.ToTable("DetallesPedido");
+            });
 
             modelBuilder.Entity("FerreAppLaVarilla.UI.Models.Pedido", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CamionAsignadoId")
-                        .HasColumnType("int");
+                b.Property<int>("CamionAsignadoId")
+                    .HasColumnType("int");
 
-                    b.Property<int>("ClienteId")
-                        .HasColumnType("int");
+                b.Property<int>("ClienteId")
+                    .HasColumnType("int");
 
-                    b.Property<int>("Estado")
-                        .HasColumnType("int");
+                b.Property<int>("Estado")
+                    .HasColumnType("int");
 
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("FechaCreacion")
+                    .HasColumnType("datetime2");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CamionAsignadoId");
+                b.HasIndex("CamionAsignadoId");
 
-                    b.HasIndex("ClienteId");
+                b.HasIndex("ClienteId");
 
-                    b.ToTable("Pedidos");
-                });
+                b.ToTable("Pedidos");
+            });
 
             modelBuilder.Entity("FerreAppLaVarilla.UI.Models.Producto", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Descripcion")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<bool>("Activo")
+                    .HasColumnType("bit");
 
-                    b.Property<string>("ImagenUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Categoria")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Descripcion")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("Precio")
-                        .HasColumnType("decimal(18,2)");
+                b.Property<string>("ImagenUrl")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Stock")
-                        .HasColumnType("int");
+                b.Property<string>("Marca")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                b.Property<string>("Nombre")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.ToTable("Productos");
-                });
+                b.Property<decimal>("Precio")
+                    .HasColumnType("decimal(18,2)");
+
+                b.Property<decimal>("PrecioCompra")
+                    .HasColumnType("decimal(18,2)");
+
+                b.Property<string>("Sku")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.Property<int>("Stock")
+                    .HasColumnType("int");
+
+                b.Property<int>("StockMinimo")
+                    .HasColumnType("int");
+
+                b.Property<string>("UnidadMedida")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+
+                b.HasKey("Id");
+
+                b.ToTable("Productos");
+            });
 
             modelBuilder.Entity("FerreAppLaVarilla.UI.Models.Usuario", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Clave")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Correo")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Correo")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Nombre")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Rol")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Password")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                b.Property<string>("Rol")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.ToTable("Usuarios");
-                });
+                b.HasKey("Id");
+
+                b.ToTable("Usuarios");
+            });
 
             modelBuilder.Entity("FerreAppLaVarilla.UI.Models.DetallePedido", b =>
-                {
-                    b.HasOne("FerreAppLaVarilla.UI.Models.Pedido", null)
-                        .WithMany("Articulos")
-                        .HasForeignKey("PedidoId");
+            {
+                b.HasOne("FerreAppLaVarilla.UI.Models.Pedido", null)
+                    .WithMany("Articulos")
+                    .HasForeignKey("PedidoId");
 
-                    b.HasOne("FerreAppLaVarilla.UI.Models.Producto", "Producto")
-                        .WithMany()
-                        .HasForeignKey("ProductoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("FerreAppLaVarilla.UI.Models.Producto", "Producto")
+                    .WithMany()
+                    .HasForeignKey("ProductoId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Producto");
-                });
-
-            modelBuilder.Entity("FerreAppLaVarilla.UI.Models.Pedido", b =>
-                {
-                    b.HasOne("FerreAppLaVarilla.UI.Models.Camion", "CamionAsignado")
-                        .WithMany()
-                        .HasForeignKey("CamionAsignadoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FerreAppLaVarilla.UI.Models.Cliente", "Cliente")
-                        .WithMany()
-                        .HasForeignKey("ClienteId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CamionAsignado");
-
-                    b.Navigation("Cliente");
-                });
+                b.Navigation("Producto");
+            });
 
             modelBuilder.Entity("FerreAppLaVarilla.UI.Models.Pedido", b =>
-                {
-                    b.Navigation("Articulos");
-                });
+            {
+                b.HasOne("FerreAppLaVarilla.UI.Models.Camion", "CamionAsignado")
+                    .WithMany()
+                    .HasForeignKey("CamionAsignadoId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.HasOne("FerreAppLaVarilla.UI.Models.Cliente", "Cliente")
+                    .WithMany()
+                    .HasForeignKey("ClienteId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("CamionAsignado");
+
+                b.Navigation("Cliente");
+            });
+
+            modelBuilder.Entity("FerreAppLaVarilla.UI.Models.Pedido", b =>
+            {
+                b.Navigation("Articulos");
+            });
 #pragma warning restore 612, 618
         }
     }

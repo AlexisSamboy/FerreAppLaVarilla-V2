@@ -1,4 +1,5 @@
-﻿using FerreAppLaVarilla.UI.Models;
+﻿using System;
+using System.Collections.Generic;
 
 namespace FerreAppLaVarilla.UI.Models
 {
@@ -20,7 +21,8 @@ namespace FerreAppLaVarilla.UI.Models
                 // Verificamos si el producto es un material pesado (por herencia)
                 if (item.Producto is MaterialPesado material)
                 {
-                    pesoTotal += material.Peso * item.Cantidad;
+                    // CORRECCIÓN APLICADA: Ahora usamos PesoUnidad
+                    pesoTotal += material.PesoUnidad * item.Cantidad;
                 }
             }
 

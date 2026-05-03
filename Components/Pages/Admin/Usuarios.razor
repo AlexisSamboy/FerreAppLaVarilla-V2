@@ -1,0 +1,239 @@
+﻿@page "/admin/usuarios"
+@using static Microsoft.AspNetCore.Components.Web.RenderMode
+@using Microsoft.AspNetCore.Components.Forms
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using FerreAppLaVarilla.UI.Models
+@attribute [Authorize(Roles = "Admin")]
+@inject FerreAppLaVarilla.UI.Services.UsuarioService UsuarioService
+@inject NavigationManager Navigation
+
+<PageTitle>Gestión de Usuarios - FerreAppLaVarilla</PageTitle>
+
+<div class="admin-layout">
+
+    <aside class="sidebar">
+        <div class="logo">
+            <span class="logo-icon">⚡</span>
+            <div>
+                <h2>FerreApp<span>LaVarilla</span></h2>
+                <p>Panel de Administración</p>
+            </div>
+        </div>
+
+        <nav class="menu">
+            <a href="/panel-admin" class="menu-item">📊 Dashboard</a>
+            <a href="/admin/agregar-producto" class="menu-item">➕ Nuevo Producto</a>
+            <a href="/productos" class="menu-item">📦 Ver Catálogo</a>
+            <a href="/admin/usuarios" class="menu-item active">👤 Usuarios</a>
+        </nav>
+
+        <button class="logout-btn" @onclick="CerrarSesion">Cerrar sesión</button>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="left-topbar">
+                <div class="menu-toggle">☰</div>
+                <input type="text" class="search-box" placeholder="Buscar usuarios..." />
+            </div>
+            <div class="right-topbar">
+                <div class="admin-user">
+                    <div class="avatar">👤</div>
+                    <div>
+                        <strong>Administrador</strong>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <section class="page-header">
+            <div>
+                <h1>Gestión de Usuarios</h1>
+                <p>Crea, modifica o elimina cuentas de acceso al sistema</p>
+            </div>
+        </section>
+
+        @if (!string.IsNullOrEmpty(mensajeError))
+        {
+            <div style="background: #ffebee; color: #d32f2f; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #d32f2f; font-weight: bold;">
+                ⚠️ @mensajeError
+            </div>
+        }
+
+        <section class="form-grid">
+            
+            <div class="left-column">
+                <div class="card">
+                    <h2>Registrar Nuevo Usuario</h2>
+                    <EditForm Model="nuevoUsuario" OnSubmit="GuardarUsuario">
+                        <div class="form-group" style="margin-bottom:15px;">
+                            <label>Nombre Completo *</label>
+                            <input type="text" @bind="nuevoUsuario.Nombre" required placeholder="Ej. Juan Pérez" />
+                        </div>
+                        <div class="form-group" style="margin-bottom:15px;">
+                            <label>Correo Electrónico *</label>
+                            <input type="email" @bind="nuevoUsuario.Correo" required placeholder="Ej. jperez@ferreapp.com" />
+                        </div>
+                        <div class="form-group" style="margin-bottom:15px;">
+                            <label>Contraseña *</label>
+                            <input type="password" @bind="nuevoUsuario.Password" required placeholder="Mínimo 6 caracteres" />
+                        </div>
+                        <div class="form-group" style="margin-bottom:20px;">
+                            <label>Rol asignado *</label>
+                            <select @bind="nuevoUsuario.Rol" required>
+                                <option value="">Selecciona un rol</option>
+                                <option value="Admin">Administrador (Acceso total)</option>
+                                <option value="Cajero">Cajero (Solo ventas)</option>
+                                <option value="Almacen">Almacenista (Solo inventario)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="save-btn" style="width: 100%; padding: 15px;">💾 Crear Cuenta</button>
+                    </EditForm>
+                </div>
+            </div>
+
+            <div class="right-column" style="flex: 1.5;">
+                <div class="card">
+                    <h2>Usuarios en el Sistema</h2>
+                    @if (usuarios == null)
+                    {
+                        <p>⏳ Cargando lista de usuarios...</p>
+                    }
+                    else if (!usuarios.Any())
+                    {
+                        <p>No hay usuarios registrados aún.</p>
+                    }
+                    else
+                    {
+                        <table style="width:100%; border-collapse: collapse; margin-top: 15px;">
+                            <thead>
+                                <tr style="background: #f4f6f8; text-align: left;">
+                                    <th style="padding: 12px;">Nombre</th>
+                                    <th style="padding: 12px;">Correo</th>
+                                    <th style="padding: 12px;">Rol</th>
+                                    <th style="padding: 12px;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var u in usuarios)
+                                {
+                                    <tr style="border-bottom: 1px solid #eee;">
+                                        <td style="padding: 12px;">@u.Nombre</td>
+                                        <td style="padding: 12px;">@u.Correo</td>
+                                        <td style="padding: 12px;">
+                                            <span style="background: @(u.Rol == "Admin" ? "#e3f2fd" : "#e8f5e9"); color: @(u.Rol == "Admin" ? "#0b3d91" : "#2e7d32"); padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 12px;">
+                                                @u.Rol
+                                            </span>
+                                        </td>
+                                        <td style="padding: 12px;">
+                                            @if (u.Correo != "admin@ferreapp.com")
+                                            {
+                                                <button @onclick="() => Eliminar(u.Id)" style="background: #ffebee; color: #d32f2f; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;">
+                                                    Eliminar
+                                                </button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+@code {
+    private List<Usuario> usuarios;
+    private Usuario nuevoUsuario = new Usuario();
+    private string mensajeError = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarUsuarios();
+    }
+
+    private async Task CargarUsuarios()
+    {
+        try
+        {
+            usuarios = await UsuarioService.ObtenerUsuariosAsync();
+        }
+        catch (Exception ex)
+        {
+            mensajeError = "Error al leer usuarios: " + ex.Message;
+        }
+    }
+
+    private async Task GuardarUsuario()
+    {
+        try
+        {
+            mensajeError = "";
+
+            if (string.IsNullOrWhiteSpace(nuevoUsuario.Nombre) || string.IsNullOrWhiteSpace(nuevoUsuario.Correo))
+            {
+                mensajeError = "Todos los campos con asterisco (*) son obligatorios.";
+                return;
+            }
+
+            // Guardar en SQL Server
+            await UsuarioService.CrearUsuarioAsync(nuevoUsuario);
+
+            // Reiniciar objeto y refrescar tabla
+            nuevoUsuario = new Usuario();
+            await CargarUsuarios();
+        }
+        catch (Exception ex)
+        {
+            mensajeError = "No se pudo crear el usuario: " + ex.Message;
+        }
+    }
+
+    private async Task Eliminar(int id)
+    {
+        try
+        {
+            await UsuarioService.EliminarUsuarioAsync(id);
+            await CargarUsuarios();
+        }
+        catch (Exception ex)
+        {
+            mensajeError = "No se pudo eliminar: " + ex.Message;
+        }
+    }
+
+    private void CerrarSesion() => Navigation.NavigateTo("/");
+}
+
+<style>
+    /* Estilos coherentes con el diseño del dashboard */
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI"; }
+    body { background: #f7f9fc; }
+    .admin-layout { display: flex; min-height: 100vh; }
+    .sidebar { width: 280px; background: linear-gradient(to bottom, #03182d, #061f3b); color: white; padding: 30px 20px; display: flex; flex-direction: column; }
+    .logo { display: flex; gap: 15px; align-items: center; margin-bottom: 40px; }
+    .logo-icon { font-size: 28px; }
+    .logo h2 { font-size: 26px; }
+    .logo span { color: #f4b400; }
+    .menu { display: flex; flex-direction: column; gap: 10px; }
+    .menu-item { text-decoration: none; color: white; padding: 14px 18px; border-radius: 12px; transition: .3s; }
+    .menu-item:hover { background: rgba(255,255,255,.08); }
+    .menu-item.active { background: #0b3d91; }
+    .logout-btn { margin-top: auto; background: transparent; border: 1px solid rgba(255,255,255,.2); color: white; padding: 16px; border-radius: 12px; cursor: pointer; }
+    .main-content { flex: 1; padding: 30px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 35px; }
+    .left-topbar { display: flex; align-items: center; gap: 20px; }
+    .search-box { width: 420px; padding: 14px 18px; border: 1px solid #ddd; border-radius: 12px; outline: none; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .page-header h1 { font-size: 34px; }
+    .form-grid { display: flex; gap: 25px; align-items: flex-start; }
+    .left-column { flex: 1; min-width: 350px; }
+    .card { background: white; border-radius: 18px; padding: 28px; box-shadow: 0 5px 20px rgba(0,0,0,.04); }
+    .card h2 { margin-bottom: 25px; color: #0d1b2a; font-size: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;}
+    input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; outline: none; }
+    .save-btn { background: #2f80ed; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
+</style>

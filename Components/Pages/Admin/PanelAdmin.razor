@@ -1,4 +1,4 @@
-﻿@page "/panel-admin"
+﻿@page "/panel-admin-old"
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
@@ -22,12 +22,15 @@
         </div>
 
         <nav class="menu">
-            <a href="#" class="menu-item active">📊 Dashboard</a>
-            <a href="#" class="menu-item">📦 Productos</a>
+            <a href="/panel-admin" class="menu-item active">📊 Dashboard</a>
+            
+            <a href="/admin/agregar-producto" class="menu-item" style="color: #f4b400; font-weight: bold; border: 1px dashed #f4b400;">➕ Nuevo Producto</a>
+            <a href="/productos" class="menu-item">📦 Ver Catálogo</a>
+            
             <a href="#" class="menu-item">📁 Categorías</a>
             <a href="#" class="menu-item">🛒 Pedidos</a>
             <a href="#" class="menu-item">👥 Clientes</a>
-            <a href="#" class="menu-item">👤 Usuarios</a>
+            <a href="/admin/usuarios" class="menu-item">👤 Usuarios</a>
             <a href="#" class="menu-item">🏷️ Ofertas</a>
             <a href="#" class="menu-item">📈 Reportes</a>
             <a href="#" class="menu-item">⚙️ Configuración</a>
@@ -71,10 +74,14 @@
                 <h2>1,245</h2>
                 <span>↑ 12.5% vs mes anterior</span>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" style="position: relative;">
                 <h3>Productos</h3>
                 <h2>328</h2>
                 <span>↑ 8.3% vs mes anterior</span>
+                
+                <button @onclick="IrAAgregarProducto" style="position: absolute; top: 25px; right: 25px; background: #0d1b2a; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s;">
+                    + Agregar
+                </button>
             </div>
             <div class="stat-card">
                 <h3>Clientes</h3>
@@ -155,6 +162,12 @@
         AuthService.CerrarSesion();
         Navigation.NavigateTo("/");
     }
+
+    private void IrAAgregarProducto()
+    {
+        Navigation.NavigateTo("/admin/agregar-producto");
+    }
+    
 }
 
 <style>

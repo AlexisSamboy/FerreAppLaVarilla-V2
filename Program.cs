@@ -38,6 +38,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<CarritoService>();
 builder.Services.AddScoped<AutenticacionService>();
 builder.Services.AddScoped<FerreAppLaVarilla.UI.Services.ProductoService>();
+builder.Services.AddScoped<FerreAppLaVarilla.UI.Services.UsuarioService>();
+builder.Services.AddScoped<DashboardService>();
 
 var app = builder.Build();
 

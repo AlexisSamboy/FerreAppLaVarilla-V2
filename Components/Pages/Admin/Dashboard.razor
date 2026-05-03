@@ -1,0 +1,159 @@
+﻿@page "/panel-admin"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using FerreAppLaVarilla.UI.Models
+@using FerreAppLaVarilla.UI.Services
+
+@attribute [Authorize(Roles = "Admin")]
+
+@inject FerreAppLaVarilla.UI.Services.DashboardService _dashboardService
+@inject NavigationManager _navigation
+@inject FerreAppLaVarilla.UI.Services.AutenticacionService _authService
+
+<PageTitle>Dashboard - FerreAppLaVarilla</PageTitle>
+
+<div class="admin-layout">
+
+    <aside class="sidebar">
+        <div class="logo">
+            <span class="logo-icon">⚡</span>
+            <div>
+                <h2>FerreApp<span>LaVarilla</span></h2>
+                <p>Módulo Administrativo</p>
+            </div>
+        </div>
+
+        <nav class="menu">
+            <a href="/panel-admin" class="menu-item active">📊 Dashboard</a>
+            @* Dentro de Dashboard.razor *@
+<button class="action-btn" style="background: #0b3d91;" 
+        @onclick='() => _navigation.NavigateTo("/admin/gestionar-productos")'>
+    📦 Actualizar Inventario
+</button>
+            <a href="/admin/agregar-producto" class="menu-item">➕ Agregar Producto</a>
+            <a href="/admin/usuarios" class="menu-item">👤 Gestión de Usuarios</a>
+        </nav>
+
+        <button class="logout-btn" @onclick="CerrarSesion">Cerrar sesión</button>
+    </aside>
+
+    <main class="main-content">
+        
+        <header class="topbar">
+            <div class="left-topbar">
+                <div class="menu-toggle">☰</div>
+                <h1 style="font-size: 24px; color: #0d1b2a;">Resumen del Negocio</h1>
+            </div>
+            <div class="right-topbar">
+                <div class="admin-user">
+                    <div class="avatar">👤</div>
+                    <strong>Administrador</strong>
+                </div>
+            </div>
+        </header>
+
+        @if (stats == null)
+        {
+            <div style="display:flex; justify-content:center; align-items:center; height: 40vh; flex-direction:column;">
+                <div class="spinner"></div>
+                <p style="margin-top:15px; color:#666;">Consultando base de datos SQL...</p>
+            </div>
+        }
+        else
+        {
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #e3f2fd; color: #2196f3;">📦</div>
+                    <div>
+                        <small>Productos Registrados</small>
+                        <h3>@stats.TotalProductos</h3>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #e8f5e9; color: #4caf50;">💰</div>
+                    <div>
+                        <small>Inversión en Inventario</small>
+                        <h3>RD$ @stats.InversionTotal.ToString("N2")</h3>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fff3e0; color: #ff9800;">🏗️</div>
+                    <div>
+                        <small>Stock Físico Total</small>
+                        <h3>@stats.StockTotal unidades</h3>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #f3e5f5; color: #9c27b0;">👤</div>
+                    <div>
+                        <small>Usuarios del Sistema</small>
+                        <h3>@stats.TotalUsuarios</h3>
+                    </div>
+                </div>
+            </section>
+
+            <section style="margin-top: 40px;">
+                <h2 style="margin-bottom: 20px; color: #0d1b2a;">Acciones rápidas</h2>
+                <div style="display: flex; gap: 20px;">
+                    <button class="action-btn" @onclick='() => _navigation.NavigateTo("/admin/agregar-producto")'>
+                        Nuevo Producto
+                    </button>
+                    <button class="action-btn" style="background: #0b3d91;" @onclick='() => _navigation.NavigateTo("/productos")'>
+                        Ver Catálogo
+                    </button>
+                </div>
+            </section>
+        }
+    </main>
+</div>
+
+@code {
+    // CORRECCIÓN: Agregamos el '?' para solucionar la advertencia CS8618
+    private DashboardStats? stats;
+
+    protected override async Task OnInitializedAsync()
+    {
+        stats = await _dashboardService.ObtenerEstadisticasAsync();
+    }
+
+    private void CerrarSesion()
+    {
+        _authService.CerrarSesion();
+        _navigation.NavigateTo("/");
+    }
+}
+
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI"; }
+    body { background: #f7f9fc; }
+    .admin-layout { display: flex; min-height: 100vh; }
+    .sidebar { width: 280px; background: linear-gradient(to bottom, #03182d, #061f3b); color: white; padding: 30px 20px; display: flex; flex-direction: column; }
+    .logo { display: flex; gap: 15px; align-items: center; margin-bottom: 40px; }
+    .logo h2 span { color: #f4b400; }
+    .menu { display: flex; flex-direction: column; gap: 10px; }
+    .menu-item { text-decoration: none; color: white; padding: 14px 18px; border-radius: 12px; transition: .3s; }
+    .menu-item.active { background: #0b3d91; font-weight: bold; }
+    .logout-btn { margin-top: auto; padding: 15px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: white; border-radius: 12px; cursor: pointer; }
+    .main-content { flex: 1; padding: 30px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 35px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+    .left-topbar { display: flex; align-items: center; gap: 20px; }
+    .admin-user { display: flex; align-items: center; gap: 12px; }
+    .avatar { width: 40px; height: 40px; background: #eef2f7; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
+    
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+    .stat-card { background: white; padding: 25px; border-radius: 18px; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+    .stat-icon { width: 55px; height: 55px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 24px; }
+    .stat-card small { color: #666; text-transform: uppercase; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; }
+    .stat-card h3 { font-size: 22px; color: #0d1b2a; margin-top: 5px; }
+
+    .action-btn { padding: 15px 30px; border-radius: 10px; border: none; background: #28a745; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .action-btn:hover { transform: scale(1.02); }
+
+    .spinner { width: 40px; height: 40px; border: 4px solid #ddd; border-top: 4px solid #2f80ed; border-radius: 50%; animation: spin 1s linear infinite; }
+    
+    /* Nota: Visual Studio mostrará la advertencia CSS041 por las dos arrobas, pero es necesario para que Blazor compile correctamente */
+    @@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>

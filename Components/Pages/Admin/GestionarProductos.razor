@@ -1,0 +1,175 @@
+﻿@page "/admin/gestionar-productos"
+@rendermode InteractiveServer
+@using FerreAppLaVarilla.UI.Models
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin")]
+@inject FerreAppLaVarilla.UI.Services.ProductoService ProductoService
+@inject NavigationManager Navigation
+@inject FerreAppLaVarilla.UI.Services.AutenticacionService AuthService
+
+<PageTitle>Gestionar Inventario - FerreAppLaVarilla</PageTitle>
+
+<div class="admin-layout">
+    
+    <aside class="sidebar">
+        <div class="logo">
+            <span class="logo-icon">⚡</span>
+            <div>
+                <h2>FerreApp<span>LaVarilla</span></h2>
+                <p>Módulo Administrativo</p>
+            </div>
+        </div>
+        <nav class="menu">
+            <a href="/panel-admin" class="menu-item">📊 Dashboard</a>
+            <a href="/admin/gestionar-productos" class="menu-item active">📦 Gestionar Inventario</a>
+            <a href="/admin/agregar-producto" class="menu-item">➕ Nuevo Producto</a>
+            <a href="/admin/usuarios" class="menu-item">👤 Usuarios</a>
+            <a href="/productos" class="menu-item" style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 10px; border-radius: 0; padding-top: 20px;">🌐 Ver Vista Cliente</a>
+        </nav>
+        <button class="logout-btn" @onclick="CerrarSesion">Cerrar sesión</button>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="left-topbar">
+                <div class="menu-toggle">☰</div>
+                <h1 style="font-size: 26px; color: #0d1b2a;">Control Central de Inventario</h1>
+            </div>
+            <div class="right-topbar">
+                <div class="admin-user">
+                    <div class="avatar">👤</div>
+                    <strong>Administrador</strong>
+                </div>
+            </div>
+        </header>
+
+        <section class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <div>
+                <p style="color: #666;">Aquí puedes editar precios, descripciones o eliminar productos del sistema.</p>
+            </div>
+            <button class="add-btn" @onclick='() => Navigation.NavigateTo("/admin/agregar-producto")'>
+                ➕ Agregar Nuevo Producto
+            </button>
+        </section>
+
+        <section class="product-grid">
+            @if (productos == null)
+            {
+                <div style="grid-column: 1/-1; text-align:center; padding: 50px;">
+                    <div class="spinner"></div>
+                    <p style="margin-top:20px;">Cargando inventario...</p>
+                </div>
+            }
+            else if (!productos.Any())
+            {
+                <div style="grid-column: 1/-1; background: white; padding: 40px; border-radius: 15px; text-align: center; border: 1px solid #eee;">
+                    <h3>No hay productos registrados aún.</h3>
+                    <button class="add-btn" style="margin-top: 20px;" @onclick='() => Navigation.NavigateTo("/admin/agregar-producto")'>
+                        Agregar mi primer producto
+                    </button>
+                </div>
+            }
+            else
+            {
+                @foreach (var p in productos)
+                {
+                    <div class="product-admin-card">
+                        <img src="images/@(string.IsNullOrEmpty(p.ImagenUrl) ? "default.png" : p.ImagenUrl)" 
+                             onerror="this.src='images/default.png'" />
+                        
+                        <div class="card-info">
+                            <h4>@p.Nombre</h4>
+                            <p class="sku">SKU: @p.Sku</p>
+                            <p class="stock">En existencia: <strong>@p.Stock</strong></p>
+                            <p class="price">RD$ @p.Precio.ToString("N2")</p>
+                        </div>
+
+                        <div class="card-actions">
+                            <button class="btn-edit" @onclick='() => Navigation.NavigateTo($"/admin/editar-producto/{p.Id}")'>
+                                ✏️ Editar
+                            </button>
+                            <button class="btn-delete" @onclick="() => Borrar(p.Id)">
+                                🗑️ Borrar
+                            </button>
+                        </div>
+                    </div>
+                }
+            }
+        </section>
+    </main>
+</div>
+
+@code {
+    private List<Producto>? productos;
+    protected override async Task OnInitializedAsync() => await CargarDatos();
+    
+    private async Task CargarDatos() => productos = await ProductoService.ObtenerProductosAsync();
+
+    private async Task Borrar(int id) 
+    { 
+        // Idealmente aquí iría una confirmación con JS, pero lo haremos directo para probar
+        await ProductoService.EliminarProductoAsync(id); 
+        await CargarDatos(); 
+    }
+    
+    private void CerrarSesion() { AuthService.CerrarSesion(); Navigation.NavigateTo("/"); }
+}
+
+<style>
+    /* ESTILOS GLOBALES DE LA FERREAPP (ESTILO ADMIN) */
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
+    body { background: #f7f9fc; color: #333; }
+    .admin-layout { display: flex; min-height: 100vh; }
+    
+    /* SIDEBAR */
+    .sidebar { width: 280px; background: linear-gradient(to bottom, #03182d, #061f3b); color: white; padding: 30px 20px; display: flex; flex-direction: column; }
+    .logo { display: flex; gap: 15px; align-items: center; margin-bottom: 40px; }
+    .logo-icon { font-size: 28px; }
+    .logo h2 { font-size: 24px; }
+    .logo h2 span { color: #f4b400; }
+    .menu { display: flex; flex-direction: column; gap: 10px; }
+    .menu-item { text-decoration: none; color: white; padding: 14px 18px; border-radius: 12px; transition: 0.3s ease; font-size: 15px; }
+    .menu-item:hover { background: rgba(255, 255, 255, 0.08); }
+    .menu-item.active { background: #0b3d91; font-weight: bold; }
+    .logout-btn { margin-top: auto; padding: 15px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: white; border-radius: 12px; cursor: pointer; transition: 0.3s; }
+    .logout-btn:hover { background: rgba(255,255,255,0.05); }
+
+    /* CONTENT & TOPBAR */
+    .main-content { flex: 1; padding: 30px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+    .left-topbar { display: flex; align-items: center; gap: 20px; }
+    .menu-toggle { font-size: 24px; cursor: pointer; }
+    .admin-user { display: flex; align-items: center; gap: 12px; background: white; padding: 8px 15px; border-radius: 50px; border: 1px solid #eee; }
+    .avatar { width: 35px; height: 35px; background: #eef2f7; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 16px; }
+
+    /* BOTÓN AGREGAR PRINCIPAL */
+    .add-btn { padding: 12px 24px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; background: #28a745; color: white; transition: 0.2s; }
+    .add-btn:hover { background: #218838; transform: scale(1.02); }
+
+    /* GRID DE PRODUCTOS ADMIN */
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
+    .product-admin-card { background: white; border-radius: 18px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); border: 1px solid #eee; display: flex; flex-direction: column; transition: 0.3s; }
+    .product-admin-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
+    .product-admin-card img { width: 100%; height: 130px; object-fit: contain; margin-bottom: 20px; }
+    
+    .card-info { flex-grow: 1; margin-bottom: 20px; }
+    .product-admin-card h4 { font-size: 17px; color: #0d1b2a; margin-bottom: 8px; height: 45px; overflow: hidden; }
+    .sku { font-size: 12px; color: #777; margin-bottom: 5px; }
+    .stock { font-size: 14px; color: #555; }
+    .stock strong { color: #333; }
+    .price { font-size: 22px; font-weight: bold; color: #28a745; margin-top: 10px; }
+
+    /* BOTONES DE ACCIÓN EN TARJETA (ESTO ARREGLA LA FORMA) */
+    .card-actions { display: flex; gap: 10px; }
+    .btn-edit, .btn-delete { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; text-align: center; color: white; }
+    
+    .btn-edit { background: #2f80ed; }
+    .btn-edit:hover { background: #2172cd; }
+    
+    .btn-delete { background: white; color: #dc3545; border: 1px solid #dc3545; }
+    .btn-delete:hover { background: #dc3545; color: white; }
+
+    /* SPINNER */
+    .spinner { width: 40px; height: 40px; border: 4px solid #ddd; border-top: 4px solid #2f80ed; border-radius: 50%; animation: spin 1s linear infinite; margin: auto;}
+    @@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>

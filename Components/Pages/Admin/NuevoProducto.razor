@@ -1,0 +1,130 @@
+﻿@page "/admin/nuevo-producto"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin")]
+@using FerreAppLaVarilla.UI.Models
+@inject FerreAppLaVarilla.UI.Services.ProductoService ProductoService
+@inject NavigationManager Navigation
+
+<PageTitle>Nuevo Producto - Admin</PageTitle>
+
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h2>📦 Agregar Nuevo Producto</h2>
+            <p>Llena los datos para ingresar mercancía al inventario</p>
+        </div>
+
+        <EditForm Model="producto" OnValidSubmit="Guardar" class="form-body">
+            <div class="input-group">
+                <label>Nombre del Producto</label>
+                <InputText @bind-Value="producto.Nombre" class="form-control" placeholder="Ej. Cemento Titán" required />
+            </div>
+
+            <div class="input-group">
+                <label>Descripción corta</label>
+                <InputText @bind-Value="producto.Descripcion" class="form-control" placeholder="Ej. Funda de 42.5 kg" />
+            </div>
+
+            <div class="input-group">
+                <label>Precio (RD$)</label>
+                <InputNumber @bind-Value="producto.Precio" class="form-control" placeholder="0.00" required />
+            </div>
+
+            <div class="input-group">
+                <label>Nombre de la Imagen</label>
+                <InputText @bind-Value="producto.ImagenUrl" class="form-control" placeholder="Ej. cemento.png" />
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="cancel-btn" @onclick="Volver">Cancelar</button>
+                <button type="submit" class="save-btn">Guardar Producto</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    // Creamos un producto en blanco para que el formulario lo llene
+    private Producto producto = new Producto();
+
+    private async Task Guardar()
+    {
+        // 1. Mandamos el producto a SQL Server
+        await ProductoService.AgregarProductoAsync(producto);
+        
+        // 2. Devolvemos al Admin al catálogo para que vea su nuevo producto
+        Navigation.NavigateTo("/productos");
+    }
+
+    private void Volver()
+    {
+        Navigation.NavigateTo("/panel-admin");
+    }
+}
+
+<style>
+    .form-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background-color: #f5f7fa;
+        font-family: 'Segoe UI';
+    }
+
+    .form-card {
+        background: white;
+        width: 100%;
+        max-width: 500px;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+
+    .form-header {
+        background: #0d1b2a;
+        color: white;
+        padding: 25px;
+        text-align: center;
+        border-bottom: 4px solid #f4b400;
+    }
+
+    .form-header h2 { margin-bottom: 5px; font-size: 22px; }
+    .form-header p { font-size: 14px; color: #ccc; margin: 0; }
+
+    .form-body { padding: 30px; }
+
+    .input-group { margin-bottom: 20px; }
+    .input-group label { display: block; font-weight: 600; margin-bottom: 8px; color: #333; font-size: 14px; }
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 15px;
+    }
+    .form-control:focus { border-color: #f4b400; outline: none; }
+
+    .form-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+    }
+
+    .cancel-btn, .save-btn {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 15px;
+        cursor: pointer;
+    }
+
+    .cancel-btn { background: #eee; color: #333; }
+    .cancel-btn:hover { background: #ddd; }
+
+    .save-btn { background: #f4b400; color: #000; }
+    .save-btn:hover { background: #d69e00; }
+</style>

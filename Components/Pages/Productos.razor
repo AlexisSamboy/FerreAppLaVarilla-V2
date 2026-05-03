@@ -2,337 +2,53 @@
 @rendermode InteractiveServer
 @using FerreAppLaVarilla.UI.Models
 @inject FerreAppLaVarilla.UI.Services.ProductoService ProductoService
+@inject NavigationManager Navigation
 
-<PageTitle>Productos - FerreAppLaVarilla</PageTitle>
+<PageTitle>Catálogo - FerreAppLaVarilla</PageTitle>
 
-<div class="products-page">
-
-    <aside class="sidebar">
-
-        <div class="logo">
-            <span class="icon">⚡</span>
-            <span class="brand">
-                FerreApp<span>LaVarilla</span>
-            </span>
+@* Agregamos un contenedor que respete el espacio del NavMenu general si lo tienes *@
+<div class="main-container" style="padding: 20px; max-width: 1200px; margin: auto;">
+    
+    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
+        <div>
+            <h1 style="color: #0d1b2a;">Catálogo de Productos</h1>
+            <p style="color: #666;">Encuentra todo lo que necesitas para tu obra.</p>
         </div>
+        @* Botón de retorno rápido para no perderse *@
+        <button class="btn-back" @onclick='() => Navigation.NavigateTo("/")'
+                style="padding: 10px 20px; border-radius: 8px; border: 1px solid #ddd; background: white; cursor: pointer;">
+            🏠 Volver al Inicio
+        </button>
+    </header>
 
-        <nav class="sidebar-menu">
-
-            <a href="/" class="menu-item">🏠 Inicio</a>
-            <a href="productos" class="menu-item active">📦 Productos</a>
-            <a href="#" class="menu-item">📂 Categorías</a>
-            <a href="#" class="menu-item">🔥 Ofertas</a>
-            <a href="#" class="menu-item">
-                🛒 Carrito
-                <span class="badge">2</span>
-            </a>
-            <a href="#" class="menu-item">📋 Mis pedidos</a>
-            <a href="#" class="menu-item">♡ Mis favoritos</a>
-            <a href="#" class="menu-item">👤 Perfil</a>
-            <a href="#" class="menu-item">↩ Cerrar sesión</a>
-
-        </nav>
-
-    </aside>
-
-    <main class="content">
-
-        <header class="topbar">
-            <div class="menu-icon">☰</div>
-
-            <div class="top-actions">
-                <span>🛒</span>
-                <span>🔔</span>
-                <span>Hola, Cliente ▾</span>
+    <section class="product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px;">
+        @if (listaProductos == null)
+        {
+            <div style="text-align:center; grid-column: 1/-1; padding: 50px;">
+                <div class="spinner"></div>
+                <p>Cargando productos...</p>
             </div>
-        </header>
-
-        <h2 class="page-title">Productos</h2>
-
-        <section class="filters">
-
-            <input type="text"
-                   placeholder="Buscar producto..."
-                   class="search-box" />
-
-            <select class="category-select">
-                <option>Todas las categorías</option>
-                <option>Herramientas</option>
-                <option>Pinturas</option>
-                <option>Tornillería</option>
-                <option>Plomería</option>
-            </select>
-
-            <button class="filter-btn">
-                Filtrar
-            </button>
-
-        </section>
-
-        <section class="product-grid">
-
-            @if (listaProductos == null)
+        }
+        else
+        {
+            @foreach (var producto in listaProductos)
             {
-                <p><em>Cargando inventario desde la base de datos...</em></p>
+                <div class="product-card" style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center; border: 1px solid #f0f0f0;">
+                    <img src="images/@(string.IsNullOrEmpty(producto.ImagenUrl) ? "default.png" : producto.ImagenUrl)"
+                         style="width: 100%; height: 160px; object-fit: contain; margin-bottom: 15px;"
+                         onerror="this.src='images/default.png'" />
+                    <h4 style="font-size: 16px; color: #333;">@producto.Nombre</h4>
+                    <p style="color: #28a745; font-weight: bold; font-size: 22px; margin: 12px 0;">RD$ @producto.Precio.ToString("N2")</p>
+                    <button style="width: 100%; padding: 12px; border: none; border-radius: 8px; background: #0d1b2a; color: white; font-weight: bold; cursor: pointer;">
+                        🛒 Añadir al Carrito
+                    </button>
+                </div>
             }
-            else if (listaProductos.Count == 0)
-            {
-                <p><em>No hay productos registrados en la base de datos todavía.</em></p>
-            }
-            else
-            {
-                @foreach (var producto in listaProductos)
-                {
-                    <div class="product-card">
-
-                        <div class="favorite">♡</div>
-
-                        @* Podremos hacer la imagen dinámica luego. Por ahora dejamos esta de placeholder. *@
-                        <img src="images/@producto.ImagenUrl" alt="@producto.Nombre" onerror="this.src='images/default.png'" />
-
-                        <h4>@producto.Nombre</h4>
-
-                        <p class="brand">Categoría Básica</p>
-
-                        <p class="price">RD$ @producto.Precio.ToString("N2")</p>
-                        <p style="font-size: 13px; color: #555; margin-bottom: 10px;">@producto.Descripcion</p>
-
-                        <AuthorizeView Roles="Admin">
-                            <Authorized>
-                                <button class="detail-btn" style="background: #e63946;">Editar Producto</button>
-                            </Authorized>
-                        </AuthorizeView>
-
-                        <AuthorizeView Roles="Cliente">
-                            <Authorized>
-                                <button class="detail-btn">Agregar al Carrito</button>
-                            </Authorized>
-                        </AuthorizeView>
-
-                        <AuthorizeView>
-                            <NotAuthorized>
-                                <button class="detail-btn" style="background: #777;">Ver detalle</button>
-                            </NotAuthorized>
-                        </AuthorizeView>
-
-                    </div>
-                }
-            }
-
-        </section>
-
-    </main>
+        }
+    </section>
 </div>
 
 @code {
-    // Variable para almacenar los productos que vienen de SQL Server
     private List<Producto>? listaProductos;
-
-    // Este método se ejecuta automáticamente cuando la página carga
-    protected override async Task OnInitializedAsync()
-    {
-        // Llamamos al servicio para obtener la data real
-        listaProductos = await ProductoService.ObtenerProductosAsync();
-    }
+    protected override async Task OnInitializedAsync() => listaProductos = await ProductoService.ObtenerProductosAsync();
 }
-
-<style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: 'Segoe UI';
-    }
-
-    body {
-        background: #f5f7fa;
-    }
-
-    .products-page {
-        display: flex;
-        min-height: 100vh;
-    }
-
-    /* SIDEBAR */
-
-    .sidebar {
-        width: 250px;
-        background: linear-gradient(to bottom, #071a2f, #0b1f3a);
-        color: white;
-        padding: 25px 18px;
-    }
-
-    .logo {
-        font-size: 22px;
-        font-weight: bold;
-        margin-bottom: 35px;
-    }
-
-    .brand span {
-        color: #f4b400;
-    }
-
-    .sidebar-menu {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .menu-item {
-        color: white;
-        text-decoration: none;
-        padding: 14px 16px;
-        border-radius: 10px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: .3s;
-        font-size: 15px;
-    }
-
-        .menu-item:hover {
-            background: rgba(255,255,255,.08);
-        }
-
-        .menu-item.active {
-            background: rgba(255,255,255,.12);
-        }
-
-    .badge {
-        background: #f4b400;
-        color: #000;
-        font-size: 12px;
-        padding: 3px 8px;
-        border-radius: 50px;
-        font-weight: bold;
-    }
-
-    /* CONTENT */
-
-    .content {
-        flex: 1;
-        padding: 25px 35px;
-        background: #fff;
-    }
-
-    /* TOPBAR */
-
-    .topbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 30px;
-    }
-
-    .menu-icon {
-        font-size: 22px;
-        cursor: pointer;
-    }
-
-    .top-actions {
-        display: flex;
-        gap: 25px;
-        align-items: center;
-        font-size: 15px;
-    }
-
-    .page-title {
-        margin-bottom: 20px;
-        color: #0d1b2a;
-    }
-
-    /* FILTERS */
-
-    .filters {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 30px;
-        flex-wrap: wrap;
-    }
-
-    .search-box,
-    .category-select {
-        padding: 14px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        min-width: 280px;
-        font-size: 14px;
-    }
-
-    .filter-btn {
-        background: #0d1b2a;
-        color: white;
-        border: none;
-        padding: 14px 24px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-    }
-
-    /* PRODUCT GRID */
-
-    .product-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 22px;
-    }
-
-    .product-card {
-        border: 1px solid #eee;
-        border-radius: 14px;
-        padding: 18px;
-        background: white;
-        position: relative;
-        transition: .3s;
-    }
-
-        .product-card:hover {
-            box-shadow: 0 10px 25px rgba(0,0,0,.06);
-            transform: translateY(-3px);
-        }
-
-    .favorite {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        color: #888;
-        cursor: pointer;
-    }
-
-    .product-card img {
-        width: 100%;
-        height: 140px;
-        object-fit: contain;
-        margin-bottom: 15px;
-    }
-
-    .product-card h4 {
-        font-size: 15px;
-        margin-bottom: 8px;
-        color: #0d1b2a;
-    }
-
-    .brand {
-        font-size: 13px;
-        color: #777;
-        margin-bottom: 10px;
-    }
-
-    .price {
-        font-size: 20px;
-        font-weight: bold;
-        margin-bottom: 15px;
-        color: #111;
-    }
-
-    .detail-btn {
-        width: 100%;
-        background: #0d1b2a;
-        color: white;
-        border: none;
-        padding: 12px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-    }
-</style>
