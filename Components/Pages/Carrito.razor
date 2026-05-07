@@ -1,0 +1,229 @@
+﻿@page "/Carrito"
+@using FerreAppLaVarilla.UI.Models
+
+<PageTitle>Carrito - FerreAppLaVarilla</PageTitle>
+
+<div class="cart-container">
+
+    <!-- IZQUIERDA: LISTA PRODUCTOS -->
+    <div class="cart-items">
+
+        <h2>🛒 Tu Carrito</h2>
+
+        @if (productos.Count == 0)
+        {
+            <p>No hay productos en el carrito.</p>
+        }
+        else
+        {
+            @foreach (var item in productos)
+            {
+                <div class="cart-item">
+
+                    <img src="@item.ImagenUrl" alt="producto" />
+
+                    <div class="item-info">
+                        <h4>@item.Nombre</h4>
+                        <p>RD$ @item.Precio</p>
+
+                        <div class="cantidad">
+                            <button @onclick="() => Disminuir(item)">-</button>
+                            <span>@item.Cantidad</span>
+                            <button @onclick="() => Aumentar(item)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="item-total">
+                        <strong>RD$ @(item.Precio * item.Cantidad)</strong>
+                        <button class="remove" @onclick="() => Eliminar(item)">❌</button>
+                    </div>
+
+                </div>
+            }
+        }
+
+    </div>
+
+    <!-- DERECHA: RESUMEN -->
+    <div class="cart-summary">
+
+        <h3>Resumen</h3>
+
+        <div class="summary-row">
+            <span>Subtotal</span>
+            <span>RD$ @Subtotal()</span>
+        </div>
+
+        <div class="summary-row">
+            <span>ITBIS (18%)</span>
+            <span>RD$ @Itbis()</span>
+        </div>
+
+        <hr />
+
+        <div class="summary-row total">
+            <span>Total</span>
+            <span>RD$ @Total()</span>
+        </div>
+
+        <!-- BOTÓN PRINCIPAL -->
+        <button class="btn-cotizar" @onclick="CrearCotizacion">
+            📄 Crear Cotización
+        </button>
+
+    </div>
+
+</div>
+
+@code {
+
+    public class ItemCarrito
+    {
+        public string Nombre { get; set; }
+        public decimal Precio { get; set; }
+        public int Cantidad { get; set; }
+        public string ImagenUrl { get; set; }
+    }
+
+    private List<ItemCarrito> productos = new()
+    {
+        new ItemCarrito { Nombre = "Taladro", Precio = 5200, Cantidad = 1, ImagenUrl="images/taladro.jpg" },
+        new ItemCarrito { Nombre = "Cemento", Precio = 350, Cantidad = 3, ImagenUrl="images/cemento.jpg" }
+    };
+
+    private void Aumentar(ItemCarrito item)
+    {
+        item.Cantidad++;
+    }
+
+    private void Disminuir(ItemCarrito item)
+    {
+        if (item.Cantidad > 1)
+            item.Cantidad--;
+    }
+
+    private void Eliminar(ItemCarrito item)
+    {
+        productos.Remove(item);
+    }
+
+    private decimal Subtotal()
+    {
+        return productos.Sum(x => x.Precio * x.Cantidad);
+    }
+
+    private decimal Itbis()
+    {
+        return Subtotal() * 0.18m;
+    }
+
+    private decimal Total()
+    {
+        return Subtotal() + Itbis();
+    }
+
+    private void CrearCotizacion()
+    {
+        Console.WriteLine("Cotización generada");
+        // luego puedes guardar en BD o generar PDF
+    }
+}
+<style>
+
+     .cart-container {
+         display: flex;
+         gap: 30px;
+         padding: 40px;
+         background: #f5f7fa;
+     }
+
+     /* LISTA PRODUCTOS */
+
+     .cart-items {
+         flex: 2;
+         background: white;
+         padding: 25px;
+         border-radius: 15px;
+     }
+
+     .cart-item {
+         display: flex;
+         align-items: center;
+         gap: 20px;
+         border-bottom: 1px solid #eee;
+         padding: 15px 0;
+     }
+
+         .cart-item img {
+             width: 80px;
+             height: 80px;
+             object-fit: cover;
+             border-radius: 10px;
+         }
+
+     .item-info {
+         flex: 1;
+     }
+
+     .cantidad {
+         display: flex;
+         gap: 10px;
+         margin-top: 10px;
+     }
+
+         .cantidad button {
+             padding: 5px 10px;
+             cursor: pointer;
+         }
+
+     .item-total {
+         text-align: right;
+     }
+
+     .remove {
+         background: none;
+         border: none;
+         cursor: pointer;
+         color: red;
+     }
+
+     /* RESUMEN */
+
+     .cart-summary {
+         flex: 1;
+         background: white;
+         padding: 25px;
+         border-radius: 15px;
+         height: fit-content;
+     }
+
+     .summary-row {
+         display: flex;
+         justify-content: space-between;
+         margin-bottom: 10px;
+     }
+
+     .total {
+         font-size: 18px;
+         font-weight: bold;
+     }
+
+     /* BOTÓN */
+
+     .btn-cotizar {
+         width: 100%;
+         margin-top: 20px;
+         padding: 15px;
+         background: #0d1b2a;
+         color: white;
+         border: none;
+         border-radius: 10px;
+         font-size: 16px;
+         cursor: pointer;
+     }
+
+         .btn-cotizar:hover {
+             background: #1b263b;
+         }
+
+</style>

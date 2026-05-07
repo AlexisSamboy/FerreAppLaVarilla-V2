@@ -11,9 +11,9 @@ namespace FerreAppLaVarilla.UI.Models
 
         public EstadoPedido Estado { get; set; }
 
-        public required Camion CamionAsignado { get; set; }
+        public required Camion? CamionAsignado { get; set; }
 
         public List<DetallePedido> Articulos { get; set; }
-            = [];
+            = new List<DetallePedido>();
     }
 }

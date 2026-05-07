@@ -40,6 +40,8 @@ builder.Services.AddScoped<AutenticacionService>();
 builder.Services.AddScoped<FerreAppLaVarilla.UI.Services.ProductoService>();
 builder.Services.AddScoped<FerreAppLaVarilla.UI.Services.UsuarioService>();
 builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<FerreAppLaVarilla.UI.Models.ServicioDespacho>();
+
 
 var app = builder.Build();
 

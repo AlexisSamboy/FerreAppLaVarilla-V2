@@ -3,6 +3,7 @@
     <File Path="AutenticacionService.cs" />
     <File Path="CarritoService.cs" />
     <File Path="DashboardService.cs" />
+    <File Path="Models/ServicioDespacho.cs" />
     <File Path="ProductoService.cs" />
     <File Path="UsuarioService.cs" />
   </Folder>
