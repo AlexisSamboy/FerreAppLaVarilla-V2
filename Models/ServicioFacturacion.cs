@@ -7,7 +7,9 @@
         // Método principal de facturación
         public decimal CalcularTotal(List<DetallePedido> detalles)
         {
-            decimal subtotal = detalles.Sum(d => d.PrecioUnitario * d.Cantidad);
+            if (detalles == null) throw new ArgumentNullException(nameof(detalles));
+
+            decimal subtotal = detalles.Sum(d => (decimal)d.PrecioUnitario * d.Cantidad);
 
             decimal descuento = CalcularDescuento(subtotal);
 
@@ -55,10 +57,49 @@
                 throw new Exception("No hay suficiente stock.");
             }
         }
+        public Factura GenerarFactura(
+         string cliente,
+         string cedulaRnc,
+            List<DetallePedido> detalles)
+            {
+            if (detalles == null) throw new ArgumentNullException(nameof(detalles));
 
+            decimal subtotal = detalles.Sum(d => (decimal)d.PrecioUnitario * d.Cantidad);
+
+            decimal descuento = CalcularDescuento(subtotal);
+
+            decimal subtotalConDescuento = subtotal - descuento;
+
+            decimal itbis = CalcularITBIS(subtotalConDescuento);
+
+            return new Factura
+            {
+                NumeroFactura = $"FAC-{DateTime.Now.Ticks}",
+
+                Cliente = cliente,
+
+                CedulaRnc = cedulaRnc,
+
+                Fecha = DateTime.Now,
+
+                Subtotal = subtotalConDescuento,
+
+                Itbis = itbis,
+
+                Detalles = detalles.Select(d => new DetalleFactura
+                {
+                    Producto = d.Producto?.Nombre ?? "(Sin producto)",
+                    Cantidad = d.Cantidad,
+                    Precio = (decimal)d.PrecioUnitario,
+                    Subtotal = (decimal)d.PrecioUnitario * d.Cantidad
+                }).ToList()
+            };
+        }
         // Calcular peso total de materiales pesados
         public double CalcularPesoCarga(List<DetallePedido> detalles)
         {
+            if (detalles == null) throw new ArgumentNullException(nameof(detalles));
+
             double pesoTotal = 0;
 
             foreach (var item in detalles)
