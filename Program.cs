@@ -41,7 +41,8 @@ builder.Services.AddScoped<FerreAppLaVarilla.UI.Services.ProductoService>();
 builder.Services.AddScoped<FerreAppLaVarilla.UI.Services.UsuarioService>();
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<FerreAppLaVarilla.UI.Models.ServicioDespacho>();
-
+builder.Services.AddScoped<FerreAppLaVarilla.UI.Services.CarritoService>();
+builder.Services.AddScoped<PdfService>();
 
 var app = builder.Build();
 

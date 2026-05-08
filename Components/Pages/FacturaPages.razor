@@ -1,0 +1,48 @@
+﻿@page "/factura"
+@using FerreAppLaVarilla.UI.Models
+@using FerreAppLaVarilla.UI.Services
+
+@inject PdfService PdfService
+@inject IJSRuntime JS
+
+<button @onclick="DescargarFactura">
+    Descargar Factura PDF
+</button>
+
+@code {
+
+    private async Task DescargarFactura()
+    {
+        var factura = new Factura
+        {
+            NumeroFactura = "FAC-0001",
+            Cliente = "Juan Pérez",
+            CedulaRnc = "001-1234567-8",
+            Fecha = DateTime.Now,
+
+            Subtotal = 5000,
+            Itbis = 900,
+
+            Detalles = new List<DetalleFactura>
+            {
+                new DetalleFactura
+                {
+                    Producto = "Taladro",
+                    Cantidad = 1,
+                    Precio = 5000,
+                    Subtotal = 5000
+                }
+            }
+        };
+
+        var pdfBytes = PdfService.GenerarFactura(factura);
+
+        var base64 = Convert.ToBase64String(pdfBytes);
+
+        await JS.InvokeVoidAsync(
+            "downloadFile",
+            "factura.pdf",
+            base64
+        );
+    }
+}

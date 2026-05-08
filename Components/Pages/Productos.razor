@@ -1,55 +1,275 @@
 ﻿@page "/productos"
 @rendermode InteractiveServer
+
 @using FerreAppLaVarilla.UI.Models
 @inject FerreAppLaVarilla.UI.Services.ProductoService ProductoService
+@inject FerreAppLaVarilla.UI.Services.CarritoService CarritoService
 @inject NavigationManager Navigation
 
-<PageTitle>Catálogo - FerreAppLaVarilla</PageTitle>
+<PageTitle>Productos - FerreAppLaVarilla</PageTitle>
 
-@* Agregamos un contenedor que respete el espacio del NavMenu general si lo tienes *@
-<div class="main-container" style="padding: 20px; max-width: 1200px; margin: auto;">
-    
-    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
-        <div>
-            <h1 style="color: #0d1b2a;">Catálogo de Productos</h1>
-            <p style="color: #666;">Encuentra todo lo que necesitas para tu obra.</p>
+<!-- TOAST FLOTANTE -->
+@if (mostrarToast)
+{
+    <div class="toast-overlay">
+
+        <div class="toast-cart animate-toast">
+
+            <div class="toast-icon">
+                ✅
+            </div>
+
+            <div class="toast-content">
+
+                <strong>
+                    Producto agregado al carrito
+                </strong>
+
+                <p>
+                    @productoAgregadoNombre
+                </p>
+
+            </div>
+
+            <button class="toast-close"
+                    @onclick="CerrarToast">
+
+                ✖
+
+            </button>
+
         </div>
-        @* Botón de retorno rápido para no perderse *@
-        <button class="btn-back" @onclick='() => Navigation.NavigateTo("/")'
-                style="padding: 10px 20px; border-radius: 8px; border: 1px solid #ddd; background: white; cursor: pointer;">
-            🏠 Volver al Inicio
-        </button>
-    </header>
 
-    <section class="product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px;">
+    </div>
+}
+
+<div class="productos-page">
+
+    <!-- HERO -->
+    <section class="productos-hero">
+
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content">
+
+            <div class="hero-text">
+
+                <span class="hero-tag">
+                    ⚡ Ferretería Profesional
+                </span>
+
+                <h1>
+                    Catálogo de Productos
+                </h1>
+
+                <p>
+                    Encuentra herramientas, materiales y soluciones
+                    para cada etapa de tu proyecto.
+                </p>
+
+            </div>
+
+            <div class="hero-actions">
+
+                <button class="back-btn"
+                        @onclick='() => Navigation.NavigateTo("/")'>
+
+                    🏠 Inicio
+
+                </button>
+
+                <button class="cart-btn"
+                        @onclick='() => Navigation.NavigateTo("/carrito")'>
+
+                    🛒 Carrito
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- FILTROS -->
+    <section class="filters-section">
+
+        <div class="search-box">
+
+            <input type="text"
+                   placeholder="Buscar productos..." />
+
+        </div>
+
+        <div class="filters">
+
+            <button class="filter active">
+                Todos
+            </button>
+
+            <button class="filter">
+                Herramientas
+            </button>
+
+            <button class="filter">
+                Electricidad
+            </button>
+
+            <button class="filter">
+                Plomería
+            </button>
+
+            <button class="filter">
+                Pinturas
+            </button>
+
+        </div>
+
+    </section>
+
+    <!-- PRODUCTOS -->
+
+    <section class="products-container">
+
         @if (listaProductos == null)
         {
-            <div style="text-align:center; grid-column: 1/-1; padding: 50px;">
+            <div class="loading">
+
                 <div class="spinner"></div>
-                <p>Cargando productos...</p>
+
+                <h3>Cargando productos...</h3>
+
+            </div>
+        }
+        else if (!listaProductos.Any())
+        {
+            <div class="empty-products">
+
+                <h2>No hay productos registrados</h2>
+
+                <p>
+                    Agrega productos desde el panel administrativo.
+                </p>
+
             </div>
         }
         else
         {
-            @foreach (var producto in listaProductos)
-            {
-                <div class="product-card" style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center; border: 1px solid #f0f0f0;">
-                    <img src="images/@(string.IsNullOrEmpty(producto.ImagenUrl) ? "default.png" : producto.ImagenUrl)"
-                         style="width: 100%; height: 160px; object-fit: contain; margin-bottom: 15px;"
-                         onerror="this.src='images/default.png'" />
-                    <h4 style="font-size: 16px; color: #333;">@producto.Nombre</h4>
-                    <p style="color: #28a745; font-weight: bold; font-size: 22px; margin: 12px 0;">RD$ @producto.Precio.ToString("N2")</p>
-                    <button  style="width: 100%; padding: 12px; border: none; border-radius: 8px; background: #0d1b2a; color: white; font-weight: bold; cursor: pointer;">
-                        🛒 Añadir al Carrito
-                    </button>
-                    <a href="/Carrito.razor" class="menu-item">Carrito</a>
-                </div>
-            }
+            <div class="products-grid">
+
+                @foreach (var producto in listaProductos)
+                {
+                    <div class="product-card">
+
+                        <div class="product-image-container">
+
+                            <img src="images/@(string.IsNullOrEmpty(producto.ImagenUrl) ? "default.png" : producto.ImagenUrl)"
+                                 alt="@producto.Nombre"
+                                 class="product-image"
+                                 onerror="this.src='images/default.png'" />
+
+                            <div class="stock-badge @(producto.Stock <= 0 ? "danger" : "")">
+
+                                @(producto.Stock > 0 ? "Disponible" : "Agotado")
+
+                            </div>
+
+                        </div>
+
+                        <div class="product-info">
+
+                            <h3>@producto.Nombre</h3>
+
+                            <p class="sku">
+                                SKU: @producto.Sku
+                            </p>
+
+                            <p class="description">
+                                @producto.Descripcion
+                            </p>
+
+                            <div class="price-section">
+
+                                <div>
+
+                                    <span class="price-label">
+                                        Precio
+                                    </span>
+
+                                    <h2>
+                                        RD$ @producto.Precio.ToString("N2")
+                                    </h2>
+
+                                </div>
+
+                                <div class="stock">
+                                    Stock: @producto.Stock
+                                </div>
+
+                            </div>
+
+                            <div class="product-actions">
+
+                                <button class="add-cart-btn"
+                                        @onclick="() => AgregarAlCarrito(producto)"
+                                        disabled="@(producto.Stock <= 0)">
+
+                                    🛒 Añadir
+
+                                </button>
+
+                                <button class="details-btn">
+
+                                    👁 Ver
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                }
+
+            </div>
         }
+
     </section>
+
 </div>
 
 @code {
+
     private List<Producto>? listaProductos;
-    protected override async Task OnInitializedAsync() => listaProductos = await ProductoService.ObtenerProductosAsync();
+
+    private bool mostrarToast = false;
+
+    private string productoAgregadoNombre = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        listaProductos = await ProductoService.ObtenerProductosAsync();
+    }
+
+    private async Task AgregarAlCarrito(Producto producto)
+    {
+        CarritoService.AgregarProducto(producto, 1);
+
+        productoAgregadoNombre = producto.Nombre;
+
+        mostrarToast = true;
+
+        StateHasChanged();
+
+        await Task.Delay(3500);
+
+        mostrarToast = false;
+
+        StateHasChanged();
+    }
+
+    private void CerrarToast()
+    {
+        mostrarToast = false;
+    }
 }

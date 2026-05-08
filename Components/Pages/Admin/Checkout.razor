@@ -1,0 +1,86 @@
+﻿@page "/checkout"
+@rendermode InteractiveServer
+@using FerreAppLaVarilla.UI.Models
+@using FerreAppLaVarilla.UI.Data
+@inject FerreAppLaVarilla.UI.Services.CarritoService CarritoService
+@inject ApplicationDbContext _context
+@inject NavigationManager Navigation
+
+<div class="container" style="max-width: 800px; margin: 40px auto; padding: 20px; background: white; border-radius: 15px; box-shadow: 0 5px 10px #000;">
+    <h2>Finalizar Compra</h2>
+    <hr />
+
+    @if (!CarritoService.Items.Any())
+    {
+        <p>Tu carrito está vacío. <a href="/productos">Volver al catálogo</a></p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cant.</th>
+                    <th>Precio</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in CarritoService.Items)
+                {
+                    <tr>
+                        <td>@item.Nombre</td>
+                        <td>@item.Cantidad</td>
+                        <td>RD$ @item.Precio.ToString("N2")</td>
+                        <td>RD$ @item.Subtotal.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div style="text-align: right; font-size: 20px; font-weight: bold; margin-bottom: 30px;">
+            TOTAL A PAGAR: RD$ @CarritoService.ObtenerTotal().ToString("N2")
+        </div>
+
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label>Dirección de Entrega:</label>
+            <textarea @bind="direccionEntrega" class="form-control" rows="3" placeholder="Ej: Calle Duarte #10, Baní..."></textarea>
+        </div>
+
+        <button class="btn-confirmar" @onclick="ConfirmarPedido"
+                style="width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">
+            ✅ Confirmar y Realizar Pedido
+        </button>
+    }
+</div>
+
+@code {
+    private string direccionEntrega = "";
+
+    private async Task ConfirmarPedido()
+    {
+        if (string.IsNullOrWhiteSpace(direccionEntrega)) return;
+
+        // 1. Creamos el objeto Pedido real
+        var nuevoPedido = new Pedido
+        {
+            FechaCreacion = DateTime.Now,
+            Estado = EstadoPedido.Pendiente,
+            // Aquí deberías asignar el Cliente logueado. Por ahora pondremos uno de prueba Id=1
+            Cliente = await _context.Clientes.FindAsync(1),
+            Articulos = CarritoService.Items.Select(i => new DetallePedido
+            {
+                ProductoId = i.ProductoId,
+                Cantidad = i.Cantidad
+            }).ToList()
+        };
+
+        // 2. Guardamos en la Base de Datos
+        _context.Pedidos.Add(nuevoPedido);
+        await _context.SaveChangesAsync();
+
+        // 3. Limpiamos y redirigimos
+        CarritoService.LimpiarCarrito();
+        Navigation.NavigateTo("/confirmacion-exito");
+    }
+}
