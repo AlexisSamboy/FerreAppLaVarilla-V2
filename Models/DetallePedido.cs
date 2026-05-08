@@ -10,5 +10,6 @@
         public Producto? Producto { get; set; } // ¡Sin la palabra required!
 
         public int Cantidad { get; set; }
+        public int PrecioUnitario { get; internal set; }
     }
 }
