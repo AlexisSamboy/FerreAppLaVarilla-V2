@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="css/productos.css" />
     <link rel="stylesheet" href="css/carrito.css" />
     <link rel="stylesheet" href="css/productos.css" />
+    <link rel="stylesheet" href="css/negocio.css" />
     <ImportMap />
     <link rel="icon" type="image/png" href="favicon.png" />
     
@@ -25,5 +26,15 @@
     
     <ReconnectModal />
     <script src="@Assets["_framework/blazor.web.js"]"></script>
+    <script>
+        window.downloadFile = function (fileName, base64String) {
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = 'data:application/pdf;base64,' + base64String;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        }
+    </script>
 </body>
 </html>

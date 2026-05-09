@@ -1,29 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace FerreAppLaVarilla.UI.Models
 {
-    // 1. Aquí definimos exactamente cuáles son las opciones de Estado (Esto arregla el error de "Pendiente")
     public enum EstadoPedido
     {
-        Pendiente = 0,
-        EnRuta = 1,
-        Completado = 2,
-        Cancelado = 3
+        Pendiente,
+        EnRuta,
+        Entregado,
+        Completado,
+        Cancelado
     }
 
     public class Pedido
     {
         public int Id { get; set; }
-        public DateTime FechaCreacion { get; set; }
 
-        public required Cliente Cliente { get; set; }
+        public DateTime FechaCreacion { get; set; }
 
         public EstadoPedido Estado { get; set; }
 
-        // 2. ¡ELIMINAMOS el 'required'! Ahora el pedido puede nacer tranquilo sin exigir un camión
+        // =========================
+        // CLIENTE
+        // =========================
+        public int ClienteId { get; set; }
+        public Cliente? Cliente { get; set; }
+
+        // =========================
+        // CAMIÓN
+        // =========================
+        public int? CamionAsignadoId { get; set; }
         public Camion? CamionAsignado { get; set; }
 
-        public List<DetallePedido> Articulos { get; set; } = new List<DetallePedido>();
+        // =========================
+        // DETALLES
+        // =========================
+        public List<DetallePedido> Articulos { get; set; } = new();
     }
 }

@@ -1,0 +1,616 @@
+﻿@page "/PuntoDeVenta"
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using FerreAppLaVarilla.UI.Models
+@using FerreAppLaVarilla.UI.Data
+
+@attribute [Authorize(Roles = "Cajero,Admin")]
+
+@inject ApplicationDbContext _context
+@inject NavigationManager Navigation
+@inject FerreAppLaVarilla.UI.Services.AutenticacionService AuthService
+@inject FerreAppLaVarilla.UI.Services.PdfService PdfService
+@inject IJSRuntime JS
+
+<PageTitle>Punto de Venta - FerreApp</PageTitle>
+
+<div class="business-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="logo-section">
+            <div class="logo-icon">⚡</div>
+
+            <div>
+                <h1>FerreApp</h1>
+                <span>La Varilla</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-menu">
+
+            <a class="menu-item active">
+                🛒 Punto de Venta
+            </a>
+
+            <a class="menu-item">
+                📄 Cotizaciones
+            </a>
+
+            <a class="menu-item">
+                👥 Clientes
+            </a>
+
+            <a class="menu-item">
+                📦 Productos
+            </a>
+
+            <a class="menu-item">
+                📊 Inventario
+            </a>
+
+        </nav>
+
+        <div class="resume-card">
+
+            <h3>Resumen del día</h3>
+
+            <div class="resume-item">
+                <span>Ventas Totales</span>
+                <strong>RD$ @ventasDelDia.ToString("N2")</strong>
+            </div>
+
+            <div class="resume-item">
+                <span>Transacciones</span>
+                <strong>@transaccionesDelDia</strong>
+            </div>
+
+        </div>
+
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-content">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+
+            <div>
+                <h2>Vista de Negocio</h2>
+                <p>Punto de Venta - FerreApp La Varilla</p>
+            </div>
+
+            <div class="user-box">
+
+                <div class="avatar">
+                    👨
+                </div>
+
+                <div>
+                    <strong>Cajero</strong>
+                    <p>Caja Principal</p>
+                </div>
+
+            </div>
+
+        </header>
+
+        <!-- CONTENT -->
+        <section class="content-grid">
+
+            <!-- PRODUCTOS -->
+            <div class="products-section">
+
+                <div class="search-container">
+
+                    <input type="text"
+                           placeholder="Buscar producto..."
+                           @bind="textoBusqueda"
+                           @bind:event="oninput"
+                           @onkeyup="FiltrarProductos" />
+
+                </div>
+
+                <div class="products-grid">
+
+                    @if (productosCatalogo == null)
+                    {
+                        <p>Cargando productos...</p>
+                    }
+                    else
+                    {
+                        @foreach (var prod in productosCatalogo)
+                        {
+                            <div class="product-card">
+
+                                <img src="images/@(string.IsNullOrEmpty(prod.ImagenUrl) ? "default.png" : prod.ImagenUrl)"
+                                     onerror="this.src='images/default.png'" />
+
+                                <h4>@prod.Nombre</h4>
+
+                                <p class="price">
+                                    RD$ @prod.Precio.ToString("N2")
+                                </p>
+
+                                <span class="stock">
+                                    Stock: @prod.Stock
+                                </span>
+
+                                <button class="add-btn"
+                                        @onclick="() => AgregarAlCarrito(prod)">
+
+                                    +
+
+                                </button>
+
+                            </div>
+                        }
+                    }
+
+                </div>
+
+            </div>
+
+            <!-- CARRITO -->
+            <div class="cart-section">
+
+                <div class="cart-card">
+
+                    <div class="cart-header">
+
+                        <h3>
+                            🛒 Factura Actual
+                        </h3>
+
+                        <span class="cart-count">
+                            @itemsFactura.Sum(x => x.Cantidad)
+                        </span>
+
+                    </div>
+
+                    <div class="cart-items">
+
+                        @if (!itemsFactura.Any())
+                        {
+                            <p class="empty-cart">
+                                No hay productos agregados.
+                            </p>
+                        }
+
+                        @foreach (var item in itemsFactura)
+                        {
+                            <div class="cart-item">
+
+                                <div>
+
+                                    <h4>@item.Producto.Nombre</h4>
+
+                                    <p>
+                                        RD$ @item.Producto.Precio.ToString("N2")
+                                    </p>
+
+                                </div>
+
+                                <div class="qty-box">
+
+                                    <button @onclick="() => RestarCantidad(item)">
+                                        -
+                                    </button>
+
+                                    <span>
+                                        @item.Cantidad
+                                    </span>
+
+                                    <button @onclick="() => SumarCantidad(item)">
+                                        +
+                                    </button>
+
+                                </div>
+
+                            </div>
+                        }
+
+                    </div>
+
+                    <div class="totals">
+
+                        <div>
+                            <span>Subtotal</span>
+                            <strong>RD$ @SubtotalVenta.ToString("N2")</strong>
+                        </div>
+
+                        <div>
+                            <span>ITBIS</span>
+                            <strong>RD$ @ItbisVenta.ToString("N2")</strong>
+                        </div>
+
+                        <div class="grand-total">
+                            <span>Total</span>
+                            <h2>RD$ @GranTotal.ToString("N2")</h2>
+                        </div>
+
+                    </div>
+
+                    <div class="cart-buttons">
+
+                        <button class="clear-btn"
+                                @onclick="VaciarCarrito">
+
+                            🗑 Vaciar
+
+                        </button>
+
+                        <button class="pay-btn"
+                                disabled="@(!itemsFactura.Any())"
+                                @onclick="AbrirModalDelivery">
+
+                            🧾 Procesar Venta
+
+                        </button>
+
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(mensajeAlerta))
+                    {
+                        <div class="alert-box">
+                            @mensajeAlerta
+                        </div>
+                    }
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<!-- MODAL DELIVERY -->
+@if (mostrarModalDelivery)
+{
+    <div class="delivery-overlay">
+
+        <div class="delivery-modal">
+
+            <h2>
+                ¿La venta requiere delivery?
+            </h2>
+
+            <div class="delivery-buttons">
+
+                <button class="normal-sale"
+                        @onclick="ProcesarVentaSinDelivery">
+
+                    🏪 Entrega inmediata
+
+                </button>
+
+                <button class="delivery-sale"
+                        @onclick="MostrarCamiones">
+
+                    🚚 Usar Delivery
+
+                </button>
+
+            </div>
+
+            @if (usarDelivery)
+            {
+                <div class="camiones-list">
+
+                    <h3>Camiones Disponibles</h3>
+
+                    @foreach (var camion in camionesDisponibles)
+                    {
+                        <button class="camion-btn"
+                                @onclick="() => SeleccionarCamion(camion.Id)">
+
+                            🚚 @camion.Placa
+
+                        </button>
+                    }
+
+                </div>
+            }
+
+            <button class="close-modal"
+                    @onclick="CerrarModal">
+
+                Cancelar
+
+            </button>
+
+        </div>
+
+    </div>
+}
+
+@code {
+
+    // =========================
+    // MODELOS
+    // =========================
+
+    public class ItemFactura
+    {
+        public required Producto Producto { get; set; }
+
+        public int Cantidad { get; set; } = 1;
+
+        public decimal Subtotal =>
+            Producto.Precio * Cantidad;
+    }
+
+    // =========================
+    // VARIABLES
+    // =========================
+
+    private List<Producto>? todosLosProductos;
+    private List<Producto>? productosCatalogo;
+
+    private List<ItemFactura> itemsFactura = new();
+
+    private string textoBusqueda = "";
+    private string mensajeAlerta = "";
+
+    private decimal ventasDelDia = 0;
+    private int transaccionesDelDia = 0;
+
+    // DELIVERY
+
+    private bool mostrarModalDelivery = false;
+    private bool usarDelivery = false;
+
+    private List<Camion> camionesDisponibles = new();
+
+    // =========================
+    // TOTALES
+    // =========================
+
+    private decimal SubtotalVenta =>
+        itemsFactura.Sum(i => i.Subtotal);
+
+    private decimal ItbisVenta =>
+        SubtotalVenta * 0.18m;
+
+    private decimal GranTotal =>
+        SubtotalVenta + ItbisVenta;
+
+    // =========================
+    // INIT
+    // =========================
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        todosLosProductos = await _context.Productos
+            .Where(x => x.Activo)
+            .ToListAsync();
+
+        productosCatalogo = todosLosProductos.Take(12).ToList();
+
+        var ventasHoy = await _context.Pedidos
+            .Where(x => x.FechaCreacion.Date == DateTime.Today)
+            .ToListAsync();
+
+        transaccionesDelDia = ventasHoy.Count;
+    }
+
+    // =========================
+    // BUSCADOR
+    // =========================
+
+    private void FiltrarProductos()
+    {
+        if (string.IsNullOrWhiteSpace(textoBusqueda))
+        {
+            productosCatalogo =
+                todosLosProductos?.Take(12).ToList();
+        }
+        else
+        {
+            productosCatalogo = todosLosProductos?
+                .Where(p =>
+                    p.Nombre.Contains(textoBusqueda,
+                    StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+    }
+
+    // =========================
+    // CARRITO
+    // =========================
+
+    private void AgregarAlCarrito(Producto p)
+    {
+        var existe = itemsFactura
+            .FirstOrDefault(x => x.Producto.Id == p.Id);
+
+        if (existe != null)
+        {
+            existe.Cantidad++;
+        }
+        else
+        {
+            itemsFactura.Add(new ItemFactura
+            {
+                Producto = p
+            });
+        }
+    }
+
+    private void SumarCantidad(ItemFactura item)
+    {
+        item.Cantidad++;
+    }
+
+    private void RestarCantidad(ItemFactura item)
+    {
+        if (item.Cantidad > 1)
+        {
+            item.Cantidad--;
+        }
+        else
+        {
+            itemsFactura.Remove(item);
+        }
+    }
+
+    private void VaciarCarrito()
+    {
+        itemsFactura.Clear();
+    }
+
+    // =========================
+    // MODAL DELIVERY
+    // =========================
+
+    private async Task AbrirModalDelivery()
+    {
+        camionesDisponibles = await _context.Camiones
+            .Where(c => c.Disponible)
+            .ToListAsync();
+
+        mostrarModalDelivery = true;
+    }
+
+    private void MostrarCamiones()
+    {
+        usarDelivery = true;
+    }
+
+    private void CerrarModal()
+    {
+        mostrarModalDelivery = false;
+        usarDelivery = false;
+    }
+
+    // =========================
+    // VENTA SIN DELIVERY
+    // =========================
+
+    private async Task ProcesarVentaSinDelivery()
+    {
+        await ProcesarVenta(null);
+    }
+
+    // =========================
+    // VENTA CON DELIVERY
+    // =========================
+
+    private async Task SeleccionarCamion(int camionId)
+    {
+        await ProcesarVenta(camionId);
+    }
+
+    // =========================
+    // PROCESAR VENTA
+    // =========================
+
+    private async Task ProcesarVenta(int? camionId)
+    {
+        try
+        {
+            var cliente = await _context.Clientes
+                .FirstOrDefaultAsync();
+
+            var nuevaVenta = new Pedido
+            {
+                FechaCreacion = DateTime.Now,
+
+                Estado = EstadoPedido.Completado,
+
+                Cliente = cliente!,
+
+                CamionAsignadoId = camionId,
+
+                Articulos = itemsFactura.Select(i =>
+                    new DetallePedido
+                    {
+                        ProductoId = i.Producto.Id,
+                        Cantidad = i.Cantidad
+                    }).ToList()
+            };
+
+            foreach (var item in itemsFactura)
+            {
+                var prodDb = await _context.Productos
+                    .FindAsync(item.Producto.Id);
+
+                if (prodDb != null)
+                {
+                    prodDb.Stock -= item.Cantidad;
+                }
+            }
+
+            _context.Pedidos.Add(nuevaVenta);
+
+            await _context.SaveChangesAsync();
+
+            string numeroFactura =
+                "FAC-" + nuevaVenta.Id.ToString("D4");
+
+            await GenerarPdf(numeroFactura);
+
+            mensajeAlerta =
+                $"Venta {numeroFactura} completada";
+
+            itemsFactura.Clear();
+
+            CerrarModal();
+
+            await CargarDatos();
+        }
+        catch (Exception ex)
+        {
+            mensajeAlerta = ex.Message;
+        }
+    }
+
+    // =========================
+    // PDF
+    // =========================
+
+    private async Task GenerarPdf(string numeroFactura)
+    {
+        var factura = new Factura
+        {
+            NumeroFactura = numeroFactura,
+
+            Cliente = "Cliente Mostrador",
+
+            Fecha = DateTime.Now,
+
+            Subtotal = SubtotalVenta,
+
+            Itbis = ItbisVenta,
+
+            Detalles = itemsFactura.Select(i =>
+                new DetalleFactura
+                {
+                    Producto = i.Producto.Nombre,
+                    Cantidad = i.Cantidad,
+                    Precio = i.Producto.Precio,
+                    Subtotal = i.Subtotal
+                }).ToList()
+        };
+
+        var pdf = PdfService.GenerarFactura(factura);
+
+        var base64 = Convert.ToBase64String(pdf);
+
+        await JS.InvokeVoidAsync(
+            "downloadFile",
+            $"{numeroFactura}.pdf",
+            base64);
+    }
+}

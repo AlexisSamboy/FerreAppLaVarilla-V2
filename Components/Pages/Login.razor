@@ -190,12 +190,19 @@
         {
             AuthService.MarcarUsuarioComoAutenticado(usuario);
 
+            // LÓGICA DE REDIRECCIÓN POR ROL
             if (usuario.Rol == "Admin")
             {
                 Navigation.NavigateTo("/panel-admin");
             }
+            else if (usuario.Rol == "Cajero")
+            {
+				// Cjaero va directo al punto de venta
+                Navigation.NavigateTo("/PuntoDeVenta");
+            }
             else
             {
+                // Si es un cliente normal o rol "Usuario"
                 Navigation.NavigateTo("/");
             }
         }
