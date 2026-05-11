@@ -15,7 +15,6 @@
     <link rel="stylesheet" href="css/productos.css" />
     <link rel="stylesheet" href="css/carrito.css" />
     <link rel="stylesheet" href="css/productos.css" />
-    <link rel="stylesheet" href="css/negocio.css" />
     <ImportMap />
     <link rel="icon" type="image/png" href="favicon.png" />
     
@@ -35,6 +34,22 @@
         link.click();
         document.body.removeChild(link);
         }
+    </script>
+    <script>
+        window.abrirPdfEnPestana = function (base64) {
+        // Convertir el base64 a un arreglo de bytes
+        const byteCharacters = atob(base64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        
+        // Crear un Blob tipo PDF y abrirlo en una nueva pestaña
+        const blob = new Blob([byteArray], { type: 'application/pdf' });
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, '_blank');
+        };
     </script>
 </body>
 </html>

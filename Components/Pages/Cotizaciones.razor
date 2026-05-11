@@ -1,0 +1,534 @@
+﻿@page "/cotizaciones"
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using FerreAppLaVarilla.UI.Models
+@using FerreAppLaVarilla.UI.Data
+@using FerreAppLaVarilla.UI.Services
+
+@attribute [Authorize(Roles = "Admin,Cajero")]
+
+@inject ApplicationDbContext _context
+@inject NavigationManager Navigation
+@inject PdfService PdfService
+@inject IJSRuntime JS
+
+<PageTitle>Cotizaciones - FerreApp</PageTitle>
+
+<div class="business-layout">
+
+    <aside class="sidebar">
+        <div class="logo-section">
+            <div class="logo-icon">⚡</div>
+            <div>
+                <h1>FerreApp</h1>
+                <span>La Varilla</span>
+            </div>
+        </div>
+ <nav class="sidebar-menu">
+            <NavLink class="menu-item" href="PuntoDeVenta" Match="NavLinkMatch.All">
+                🛒 Punto de Venta
+            </NavLink>
+            <NavLink class="menu-item" href="cotizaciones">
+                📄 Cotizaciones
+            </NavLink>
+            <NavLink class="menu-item" href="Clientes">
+                👥 Clientes
+            </NavLink>
+            <NavLink class="menu-item" href="Productos">
+                📦 Productos
+            </NavLink>
+            <NavLink class="menu-item" href="Inventario">
+                📊 Inventario
+            </NavLink>
+            <NavLink class="menu-item" href="Reportes">
+                📈 Reportes
+            </NavLink>
+            <NavLink class="menu-item" href="facturas">
+                🧾 Facturas
+            </NavLink>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div>
+                <h2>Gestión de Cotizaciones</h2>
+                <p>Administración y conversión de cotizaciones</p>
+            </div>
+            
+            <div class="topbar-right">
+                <button class="new-btn" @onclick='() => Navigation.NavigateTo("/PuntoDeVenta")'>
+    ➕ Nueva Cotización
+</button>
+            </div>
+        </header>
+
+        <div class="filters">
+            <input type="text"
+                   placeholder="🔍 Buscar cliente..."
+                   @bind="textoBusqueda"
+                   @bind:event="oninput" />
+        </div>
+
+        <section class="table-section">
+            <div class="table-container">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th># Cotización</th>
+                            <th>Cliente</th>
+                            <th>Fecha</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (cotizaciones == null)
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center" style="padding: 40px;">Cargando...</td>
+                            </tr>
+                        }
+                        else if (!CotizacionesFiltradas().Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center" style="padding: 40px;">No hay cotizaciones registradas.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var cot in CotizacionesFiltradas())
+                            {
+                                <tr>
+                                    <td><strong>COT-@cot.Id.ToString("D4")</strong></td>
+                                    <td>@cot.Cliente?.NombreCompleto</td>
+                                    <td>@cot.FechaCreacion.ToString("dd/MM/yyyy")</td>
+                                    
+                                    @{
+                                        var subtotal = cot.Articulos?.Sum(x => x.PrecioUnitario * x.Cantidad) ?? 0;
+                                        var totalConItbis = subtotal + (subtotal * 0.18m);
+                                    }
+                                    
+                                    <td><strong>RD$ @totalConItbis.ToString("N2")</strong></td>
+                                    
+                                    <td>
+                                        <span class="estado-pill @(cot.Estado == EstadoPedido.Completado ? "estado-completado" : "estado-pendiente")">
+                                            @cot.Estado
+                                        </span>
+                                    </td>
+                                    
+                                    <td class="text-center action-cell">
+                                        <button class="action-btn view" title="Ver Detalle" @onclick="() => VerDetalle(cot)">
+                                            👁
+                                        </button>
+                                        <button class="action-btn convert" title="Convertir a Factura" @onclick="() => ConvertirAFactura(cot)">
+                                            🧾
+                                        </button>
+                                        <button class="action-btn delete" title="Eliminar" @onclick="() => EliminarCotizacion(cot.Id)">
+                                            🗑
+                                        </button>
+                                        
+                                        <button class="action-btn print" title="Imprimir PDF" @onclick="() => GenerarYAbrirCotizacionPdf(cot)">
+                                            📄
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+
+@if (mostrarModal)
+{
+    <div class="modal-overlay">
+        <div class="cot-modal">
+            <div class="modal-header">
+                <h2>Nueva Cotización Rápida</h2>
+                <button class="close-btn" @onclick="CerrarModal">✖</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="input-group">
+                    <label>Cliente</label>
+                    <input type="text" @bind="clienteNombre" placeholder="Nombre cliente" />
+                </div>
+                <div class="input-group">
+                    <label>Teléfono</label>
+                    <input type="text" @bind="clienteTelefono" placeholder="809..." />
+                </div>
+                <div class="input-group">
+                    <label>Dirección</label>
+                    <textarea @bind="clienteDireccion" placeholder="Ciudad, Provincia..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Notas</label>
+                    <textarea @bind="notasCotizacion" placeholder="Información adicional..."></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="cancel-btn" @onclick="CerrarModal">Cancelar</button>
+                <button class="save-btn" @onclick="GuardarCotizacion">💾 Generar Base</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Pedido> cotizaciones = new();
+    private bool mostrarModal = false;
+    private string textoBusqueda = "";
+    private string clienteNombre = "";
+    private string clienteTelefono = "";
+    private string clienteDireccion = "";
+    private string notasCotizacion = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarCotizaciones();
+    }
+
+    private async Task CargarCotizaciones()
+    {
+        cotizaciones = await _context.Pedidos
+            .Include(x => x.Cliente)
+            .Include(x => x.Articulos)
+                .ThenInclude(a => a.Producto)
+            .Where(x => x.TipoDocumento == "Cotizacion")
+            .OrderByDescending(x => x.Id)
+            .ToListAsync();
+    }
+
+    private IEnumerable<Pedido> CotizacionesFiltradas()
+    {
+        if (string.IsNullOrWhiteSpace(textoBusqueda))
+            return cotizaciones;
+
+        return cotizaciones.Where(x =>
+            x.Cliente != null &&
+            x.Cliente.NombreCompleto.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void AbrirModalNueva() => mostrarModal = true;
+
+    private void CerrarModal()
+    {
+        mostrarModal = false;
+        LimpiarCampos();
+    }
+
+    private void LimpiarCampos()
+    {
+        clienteNombre = "";
+        clienteTelefono = "";
+        clienteDireccion = "";
+        notasCotizacion = "";
+    }
+
+    private async Task GuardarCotizacion()
+    {
+        try
+        {
+            var clienteDB = new Cliente
+            {
+                NombreCompleto = string.IsNullOrWhiteSpace(clienteNombre) ? "Cliente General" : clienteNombre,
+                CedulaRNC = "N/A",
+                Telefono = string.IsNullOrWhiteSpace(clienteTelefono) ? "N/A" : clienteTelefono,
+                DireccionEntrega = string.IsNullOrWhiteSpace(clienteDireccion) ? "N/A" : clienteDireccion
+            };
+
+            _context.Clientes.Add(clienteDB);
+            await _context.SaveChangesAsync();
+
+            var nuevaCotizacion = new Pedido
+            {
+                FechaCreacion = DateTime.Now,
+                ClienteId = clienteDB.Id,
+                Estado = EstadoPedido.Pendiente,
+                TipoDocumento = "Cotizacion",
+                RequiereDelivery = false,
+                Articulos = new List<DetallePedido>()
+            };
+
+            _context.Pedidos.Add(nuevaCotizacion);
+            await _context.SaveChangesAsync();
+
+            await CargarCotizaciones();
+            CerrarModal();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    private void VerDetalle(Pedido cot)
+    {
+        Navigation.NavigateTo($"/cotizacion-detalle/{cot.Id}");
+    }
+
+    private async Task ConvertirAFactura(Pedido cot)
+    {
+        cot.TipoDocumento = "Factura";
+        cot.Estado = EstadoPedido.Completado;
+        
+        _context.Pedidos.Update(cot);
+        await _context.SaveChangesAsync();
+        await CargarCotizaciones();
+    }
+
+    private async Task EliminarCotizacion(int id)
+    {
+        var cot = await _context.Pedidos.FindAsync(id);
+        if (cot != null)
+        {
+            _context.Pedidos.Remove(cot);
+            await _context.SaveChangesAsync();
+            await CargarCotizaciones();
+        }
+    }
+
+    // MÉTODO PARA GENERAR EL PDF
+    private async Task GenerarYAbrirCotizacionPdf(Pedido cotizacionDb)
+    {
+        try
+        {
+            var subtotal = cotizacionDb.Articulos?.Sum(a => a.PrecioUnitario * a.Cantidad) ?? 0;
+            var itbis = subtotal * 0.18m;
+
+            var modeloCotizacionPdf = new Factura
+            {
+                NumeroFactura = $"COT-{cotizacionDb.Id:D6}", 
+                Cliente = cotizacionDb.Cliente?.NombreCompleto ?? "Cliente General",
+                CedulaRnc = cotizacionDb.Cliente?.CedulaRNC ?? "N/A",
+                Fecha = cotizacionDb.FechaCreacion,
+                Subtotal = subtotal,
+                Itbis = itbis,
+                Detalles = cotizacionDb.Articulos?.Select(a => new DetalleFactura
+                {
+                    Producto = a.Producto?.Nombre ?? "Producto Desconocido",
+                    Cantidad = a.Cantidad,
+                    Precio = a.PrecioUnitario,
+                    Subtotal = a.PrecioUnitario * a.Cantidad
+                }).ToList() ?? new List<DetalleFactura>()
+            };
+
+            var pdfBytes = PdfService.GenerarCotizacionPdf(modeloCotizacionPdf);
+            var base64 = Convert.ToBase64String(pdfBytes);
+
+            await JS.InvokeVoidAsync("abrirPdfEnPestana", base64);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al generar Cotización PDF: {ex.Message}");
+        }
+    }
+}
+
+<style>
+/* =========================
+   LAYOUT GENERAL (FerreApp)
+========================= */
+.business-layout {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background: #f4f6fb;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+}
+
+/* =========================
+   SIDEBAR
+========================= */
+.sidebar {
+    width: 240px;
+    background: #0f172a;
+    color: white;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 30px;
+}
+
+.logo-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    background: #eab308;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+
+.logo-section h1 { margin: 0; font-size: 18px; font-weight: 700; }
+.logo-section span { color: #eab308; font-size: 12px; }
+
+.sidebar-menu { display: flex; flex-direction: column; gap: 8px; }
+
+.menu-item {
+    padding: 12px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.2s;
+    color: #cbd5e1;
+    text-decoration: none;
+}
+
+.menu-item:hover { background: rgba(255,255,255,.05); color: white; }
+.menu-item.active { background: #eab308; color: #0f172a; font-weight: 600; }
+
+/* =========================
+   MAIN CONTENT
+========================= */
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+    height: 100vh;
+    padding: 20px 30px;
+}
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.topbar h2 { margin: 0; font-size: 24px; font-weight: 700; color: #1e293b; }
+.topbar p { color: #64748b; font-size: 13px; margin-top: 4px; }
+
+.new-btn {
+    background: #0f172a; 
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.new-btn:hover { background: #1e293b; transform: translateY(-2px); }
+
+/* =========================
+   FILTROS
+========================= */
+.filters { margin-bottom: 20px; }
+.filters input {
+    width: 100%;
+    max-width: 400px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    font-size: 14px;
+    outline: none;
+}
+.filters input:focus { border-color: #3b82f6; }
+
+/* =========================
+   TABLA MODERNA
+========================= */
+.table-container {
+    background: white;
+    border-radius: 16px;
+    padding: 5px; 
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+.modern-table { width: 100%; border-collapse: collapse; }
+.modern-table th {
+    background: #f8fafc; color: #475569; font-weight: 600; font-size: 12px;
+    text-transform: uppercase; padding: 16px 20px; text-align: left; border-bottom: 1px solid #e2e8f0;
+}
+.modern-table td { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; vertical-align: middle; }
+.modern-table tbody tr:hover { background: #f8fafc; }
+.text-center { text-align: center !important; }
+
+/* =========================
+   ESTADOS (Pills)
+========================= */
+.estado-pill {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.estado-pendiente { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+.estado-completado { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+
+/* =========================
+   BOTONES DE ACCIÓN
+========================= */
+.action-cell { display: flex; gap: 8px; justify-content: center; }
+.action-btn {
+    border: none; width: 34px; height: 34px; border-radius: 8px;
+    cursor: pointer; font-size: 15px; transition: 0.2s;
+    display: flex; align-items: center; justify-content: center;
+}
+.action-btn:hover { transform: scale(1.1); }
+.action-btn.view { background: #eff6ff; color: #1d4ed8; }
+.action-btn.convert { background: #f0fdf4; color: #15803d; }
+.action-btn.delete { background: #fef2f2; color: #b91c1c; }
+.action-btn.print { background: #fffbeb; color: #b45309; }
+
+/* =========================
+   MODAL
+========================= */
+.modal-overlay {
+    position: fixed; inset: 0; background: rgba(15,23,42,.6);
+    backdrop-filter: blur(2px); display: flex; justify-content: center; align-items: center;
+    z-index: 9999;
+}
+.cot-modal {
+    width: 100%; max-width: 500px; background: white; border-radius: 16px; overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,.2); animation: modalIn .2s ease;
+}
+@@keyframes modalIn {
+    from { transform: translateY(15px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #e2e8f0; }
+.modal-header h2 { margin: 0; font-size: 18px; color: #0f172a; }
+.close-btn { border: none; background: #f1f5f9; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; color:#64748b;}
+
+.modal-body { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+.input-group { display: flex; flex-direction: column; gap: 6px; }
+.input-group label { font-size: 13px; font-weight: 600; color: #475569; }
+.input-group input, .input-group textarea {
+    border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; font-size: 14px; outline: none; transition: .2s;
+}
+.input-group input:focus, .input-group textarea:focus { border-color: #3b82f6; }
+.input-group textarea { min-height: 80px; resize: vertical; }
+
+.modal-footer {
+    display: flex; justify-content: flex-end; gap: 10px; padding: 15px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc;
+}
+.cancel-btn { border: 1px solid #cbd5e1; background: white; color: #475569; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; }
+.save-btn { border: none; background: #22c55e; color: white; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+</style>

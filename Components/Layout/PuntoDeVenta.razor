@@ -10,20 +10,15 @@
 
 @inject ApplicationDbContext _context
 @inject NavigationManager Navigation
-@inject FerreAppLaVarilla.UI.Services.AutenticacionService AuthService
-@inject FerreAppLaVarilla.UI.Services.PdfService PdfService
 @inject IJSRuntime JS
+@* @inject FerreAppLaVarilla.UI.Services.PdfService PdfService (Descomenta si lo usas)*@
 
 <PageTitle>Punto de Venta - FerreApp</PageTitle>
 
 <div class="business-layout">
-
-    <!-- SIDEBAR -->
     <aside class="sidebar">
-
         <div class="logo-section">
             <div class="logo-icon">⚡</div>
-
             <div>
                 <h1>FerreApp</h1>
                 <span>La Varilla</span>
@@ -31,91 +26,87 @@
         </div>
 
         <nav class="sidebar-menu">
-
-            <a class="menu-item active">
+            <NavLink class="menu-item" href="PuntoDeVenta" Match="NavLinkMatch.All">
                 🛒 Punto de Venta
-            </a>
-
-            <a class="menu-item">
+            </NavLink>
+            <NavLink class="menu-item" href="cotizaciones">
                 📄 Cotizaciones
-            </a>
-
-            <a class="menu-item">
+            </NavLink>
+            <NavLink class="menu-item" href="Clientes">
                 👥 Clientes
-            </a>
-
-            <a class="menu-item">
+            </NavLink>
+            <NavLink class="menu-item" href="Productos">
                 📦 Productos
-            </a>
-
-            <a class="menu-item">
+            </NavLink>
+            <NavLink class="menu-item" href="Inventario">
                 📊 Inventario
-            </a>
-
+            </NavLink>
+            <NavLink class="menu-item" href="Reportes">
+                📈 Reportes
+            </NavLink>
+            <NavLink class="menu-item" href="facturas">
+                🧾 Facturas
+            </NavLink>
         </nav>
 
         <div class="resume-card">
-
             <h3>Resumen del día</h3>
-
             <div class="resume-item">
                 <span>Ventas Totales</span>
                 <strong>RD$ @ventasDelDia.ToString("N2")</strong>
             </div>
-
             <div class="resume-item">
                 <span>Transacciones</span>
                 <strong>@transaccionesDelDia</strong>
             </div>
-
+            <div class="resume-item">
+                <span>Productos vendidos</span>
+                <strong>@itemsFactura.Sum(x => x.Cantidad)</strong>
+            </div>
         </div>
-
     </aside>
 
-    <!-- MAIN -->
     <main class="main-content">
-
-        <!-- TOPBAR -->
         <header class="topbar">
-
             <div>
                 <h2>Vista de Negocio</h2>
                 <p>Punto de Venta - FerreApp La Varilla</p>
             </div>
-
-            <div class="user-box">
-
-                <div class="avatar">
-                    👨
+            <div class="topbar-right">
+                <div class="info-box">
+                    <small>Hora Actual</small>
+                    <strong>@DateTime.Now.ToString("hh:mm tt")</strong>
                 </div>
-
-                <div>
-                    <strong>Cajero</strong>
-                    <p>Caja Principal</p>
+                <div class="user-box">
+                    <div class="avatar">👨</div>
+                    <div>
+                        <strong>Cajero</strong>
+                        <p>Caja Principal</p>
+                    </div>
                 </div>
-
             </div>
-
         </header>
 
-        <!-- CONTENT -->
-        <section class="content-grid">
-
-            <!-- PRODUCTOS -->
+        <section class="dashboard-grid">
             <div class="products-section">
-
-                <div class="search-container">
-
+                <div class="search-bar">
+                    <span class="search-icon">🔍</span>
                     <input type="text"
                            placeholder="Buscar producto..."
                            @bind="textoBusqueda"
                            @bind:event="oninput"
                            @onkeyup="FiltrarProductos" />
+                </div>
 
+                <div class="categories">
+                    <button class="cat-btn active">Todos</button>
+                    <button class="cat-btn">Herramientas</button>
+                    <button class="cat-btn">Materiales</button>
+                    <button class="cat-btn">Electricidad</button>
+                    <button class="cat-btn">Pinturas</button>
                 </div>
 
                 <div class="products-grid">
-
                     @if (productosCatalogo == null)
                     {
                         <p>Cargando productos...</p>
@@ -125,265 +116,205 @@
                         @foreach (var prod in productosCatalogo)
                         {
                             <div class="product-card">
-
-                                <img src="images/@(string.IsNullOrEmpty(prod.ImagenUrl) ? "default.png" : prod.ImagenUrl)"
-                                     onerror="this.src='images/default.png'" />
-
-                                <h4>@prod.Nombre</h4>
-
-                                <p class="price">
-                                    RD$ @prod.Precio.ToString("N2")
-                                </p>
-
-                                <span class="stock">
-                                    Stock: @prod.Stock
-                                </span>
-
-                                <button class="add-btn"
-                                        @onclick="() => AgregarAlCarrito(prod)">
-
-                                    +
-
-                                </button>
-
+                                <div class="product-image-container">
+                                    <img src="images/@(string.IsNullOrEmpty(prod.ImagenUrl) ? "default.png" : prod.ImagenUrl)"
+                                         onerror="this.src='images/default.png'" />
+                                </div>
+                                <div class="product-info">
+                                    <h4>@prod.Nombre</h4>
+                                    <p class="price">RD$ @prod.Precio.ToString("N2")</p>
+                                    <span class="stock">Stock: @prod.Stock</span>
+                                    <div class="quantity-add">
+                                        <input type="number" min="1" class="qty-input" @bind="cantidadesTemp[prod.Id]" />
+                                        <button class="add-btn" @onclick="() => AgregarAlCarrito(prod)">+</button>
+                                    </div>
+                                </div>
                             </div>
                         }
                     }
-
                 </div>
 
+                <div class="pagination-container">
+                    @for (int i = 1; i <= totalPaginas; i++)
+                    {
+                        int numeroPagina = i;
+                        <button class="page-btn @(paginaActual == numeroPagina ? "active-page" : "")"
+                                @onclick="() => CambiarPagina(numeroPagina)">
+                            @numeroPagina
+                        </button>
+                    }
+                </div>
             </div>
 
-            <!-- CARRITO -->
             <div class="cart-section">
-
                 <div class="cart-card">
-
                     <div class="cart-header">
-
-                        <h3>
-                            🛒 Factura Actual
-                        </h3>
-
-                        <span class="cart-count">
-                            @itemsFactura.Sum(x => x.Cantidad)
-                        </span>
-
+                        <h3>🛒 Factura Actual</h3>
+                        <span class="cart-count">@itemsFactura.Sum(x => x.Cantidad)</span>
                     </div>
 
                     <div class="cart-items">
-
                         @if (!itemsFactura.Any())
                         {
-                            <p class="empty-cart">
-                                No hay productos agregados.
-                            </p>
+                            <p class="empty-cart">No hay productos agregados.</p>
                         }
-
                         @foreach (var item in itemsFactura)
                         {
                             <div class="cart-item">
-
                                 <div>
-
                                     <h4>@item.Producto.Nombre</h4>
-
-                                    <p>
-                                        RD$ @item.Producto.Precio.ToString("N2")
-                                    </p>
-
+                                    <p>RD$ @item.Producto.Precio.ToString("N2")</p>
                                 </div>
-
                                 <div class="qty-box">
-
-                                    <button @onclick="() => RestarCantidad(item)">
-                                        -
-                                    </button>
-
-                                    <span>
-                                        @item.Cantidad
-                                    </span>
-
-                                    <button @onclick="() => SumarCantidad(item)">
-                                        +
-                                    </button>
-
+                                    <button @onclick="() => RestarCantidad(item)">-</button>
+                                    <span>@item.Cantidad</span>
+                                    <button @onclick="() => SumarCantidad(item)">+</button>
                                 </div>
-
                             </div>
                         }
-
                     </div>
 
                     <div class="totals">
-
                         <div>
                             <span>Subtotal</span>
                             <strong>RD$ @SubtotalVenta.ToString("N2")</strong>
                         </div>
-
                         <div>
                             <span>ITBIS</span>
                             <strong>RD$ @ItbisVenta.ToString("N2")</strong>
                         </div>
-
                         <div class="grand-total">
                             <span>Total</span>
                             <h2>RD$ @GranTotal.ToString("N2")</h2>
                         </div>
-
                     </div>
 
                     <div class="cart-buttons">
-
-                        <button class="clear-btn"
-                                @onclick="VaciarCarrito">
-
-                            🗑 Vaciar
-
+                        <button class="clear-btn" @onclick="VaciarCarrito">🗑 Vaciar</button>
+                        
+                        <button class="quote-btn" 
+                                disabled="@(!itemsFactura.Any())" 
+                                @onclick="GenerarCotizacionRapida">
+                            📄 Cotización
                         </button>
-
-                        <button class="pay-btn"
-                                disabled="@(!itemsFactura.Any())"
-                                @onclick="AbrirModalDelivery">
-
-                            🧾 Procesar Venta
-
+                        
+                        <button class="pay-btn" disabled="@(!itemsFactura.Any())" @onclick="AbrirModalVenta">
+                            🧾 Facturar
                         </button>
-
                     </div>
-
-                    @if (!string.IsNullOrEmpty(mensajeAlerta))
-                    {
-                        <div class="alert-box">
-                            @mensajeAlerta
-                        </div>
-                    }
-
                 </div>
 
+                <div class="sales-history">
+                    <div class="sales-header">
+                        <h3>Últimas Ventas</h3>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Factura</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var venta in ultimasVentas)
+                            {
+                                <tr>
+                                    <td>FAC-@venta.Id.ToString("D4")</td>
+                                    <td>RD$ @(venta.Articulos?.Sum(a => a.PrecioUnitario * a.Cantidad).ToString("N2") ?? "0.00")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
-
         </section>
-
     </main>
-
 </div>
 
-<!-- MODAL DELIVERY -->
-@if (mostrarModalDelivery)
+@if (mostrarModalVenta)
 {
-    <div class="delivery-overlay">
-
-        <div class="delivery-modal">
-
-            <h2>
-                ¿La venta requiere delivery?
-            </h2>
-
-            <div class="delivery-buttons">
-
-                <button class="normal-sale"
-                        @onclick="ProcesarVentaSinDelivery">
-
-                    🏪 Entrega inmediata
-
-                </button>
-
-                <button class="delivery-sale"
-                        @onclick="MostrarCamiones">
-
-                    🚚 Usar Delivery
-
-                </button>
-
-            </div>
-
-            @if (usarDelivery)
-            {
-                <div class="camiones-list">
-
-                    <h3>Camiones Disponibles</h3>
-
-                    @foreach (var camion in camionesDisponibles)
-                    {
-                        <button class="camion-btn"
-                                @onclick="() => SeleccionarCamion(camion.Id)">
-
-                            🚚 @camion.Placa
-
-                        </button>
-                    }
-
+    <div class="modal-overlay">
+        <div class="sale-modal">
+            <div class="modal-header">
+                <div>
+                    <h2>🧾 Procesar Venta</h2>
+                    <p>Complete los datos de la factura</p>
                 </div>
-            }
-
-            <button class="close-modal"
-                    @onclick="CerrarModal">
-
-                Cancelar
-
-            </button>
-
+                <button class="close-modal-btn" @onclick="CerrarModalVenta">✖</button>
+            </div>
+            <div class="modal-body">
+                <div class="section-box">
+                    <h3>👤 Cliente</h3>
+                    <input type="text" placeholder="Nombre" @bind="clienteNombre" />
+                    <input type="text" placeholder="Teléfono" @bind="clienteTelefono" />
+                    <textarea placeholder="Dirección" @bind="clienteDireccion"></textarea>
+                </div>
+                <div class="section-box">
+                    <h3>🚚 Tipo Entrega</h3>
+                    <div class="delivery-options">
+                        <button class="delivery-option @(tipoEntrega == "Retiro" ? "active-delivery" : "")" @onclick='() => tipoEntrega = "Retiro"'>🏪 Retiro</button>
+                        <button class="delivery-option @(tipoEntrega == "Delivery" ? "active-delivery" : "")" @onclick='() => tipoEntrega = "Delivery"'>🚚 Delivery</button>
+                    </div>
+                    @if (tipoEntrega == "Delivery")
+                    {
+                        <select @bind="camionSeleccionadoId">
+                            <option value="0">Seleccione Camión</option>
+                            @foreach (var camion in camionesDisponibles)
+                            {
+                                <option value="@camion.Id">🚚 @camion.Placa</option>
+                            }
+                        </select>
+                    }
+                </div>
+                <div class="section-box">
+                    <h3>💳 Método Pago</h3>
+                    <div class="payment-grid">
+                        <button class="pay-method @(metodoPago == "Efectivo" ? "active-pay" : "")" @onclick='() => metodoPago = "Efectivo"'>💵 Efectivo</button>
+                        <button class="pay-method @(metodoPago == "Transferencia" ? "active-pay" : "")" @onclick='() => metodoPago = "Transferencia"'>🏦 Transferencia</button>
+                        <button class="pay-method @(metodoPago == "Tarjeta" ? "active-pay" : "")" @onclick='() => metodoPago = "Tarjeta"'>💳 Tarjeta</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="cancel-sale-btn" @onclick="CerrarModalVenta">Cancelar</button>
+                <button class="confirm-sale-btn" @onclick="ConfirmarVenta">✅ Confirmar Venta</button>
+            </div>
         </div>
-
     </div>
 }
 
 @code {
-
-    // =========================
-    // MODELOS
-    // =========================
-
     public class ItemFactura
     {
         public required Producto Producto { get; set; }
-
         public int Cantidad { get; set; } = 1;
-
-        public decimal Subtotal =>
-            Producto.Precio * Cantidad;
+        public decimal Subtotal => Producto.Precio * Cantidad;
     }
-
-    // =========================
-    // VARIABLES
-    // =========================
 
     private List<Producto>? todosLosProductos;
     private List<Producto>? productosCatalogo;
-
     private List<ItemFactura> itemsFactura = new();
-
+    private List<Pedido> ultimasVentas = new();
+    private Dictionary<int, int> cantidadesTemp = new();
     private string textoBusqueda = "";
-    private string mensajeAlerta = "";
-
     private decimal ventasDelDia = 0;
     private int transaccionesDelDia = 0;
-
-    // DELIVERY
-
-    private bool mostrarModalDelivery = false;
-    private bool usarDelivery = false;
-
+    private bool mostrarModalVenta = false;
+    private string clienteNombre = "";
+    private string clienteTelefono = "";
+    private string clienteDireccion = "";
+    private string tipoEntrega = "Retiro";
+    private string metodoPago = "Efectivo";
+    private int camionSeleccionadoId = 0;
     private List<Camion> camionesDisponibles = new();
+    
+    private int paginaActual = 1;
+    private int productosPorPagina = 8; // Reducido para que quepa mejor en pantalla
+    private int totalPaginas = 1;
 
-    // =========================
-    // TOTALES
-    // =========================
-
-    private decimal SubtotalVenta =>
-        itemsFactura.Sum(i => i.Subtotal);
-
-    private decimal ItbisVenta =>
-        SubtotalVenta * 0.18m;
-
-    private decimal GranTotal =>
-        SubtotalVenta + ItbisVenta;
-
-    // =========================
-    // INIT
-    // =========================
+    private decimal SubtotalVenta => itemsFactura.Sum(i => i.Subtotal);
+    private decimal ItbisVenta => SubtotalVenta * 0.18m;
+    private decimal GranTotal => SubtotalVenta + ItbisVenta;
 
     protected override async Task OnInitializedAsync()
     {
@@ -391,226 +322,580 @@
     }
 
     private async Task CargarDatos()
+{
+    try
     {
-        todosLosProductos = await _context.Productos
-            .Where(x => x.Activo)
+        todosLosProductos = await _context.Productos.Where(x => x.Activo).ToListAsync();
+
+        // 1. LLENAR EL DICCIONARIO PRIMERO (Antes de cualquier renderizado)
+        foreach (var p in todosLosProductos)
+        {
+            // Usamos una validación por si acaso se recargan los datos
+            if (!cantidadesTemp.ContainsKey(p.Id))
+            {
+                cantidadesTemp[p.Id] = 1;
+            }
+        }
+
+        // 2. LUEGO PREPARAMOS LA PAGINACIÓN Y DIBUJAMOS LA PANTALLA
+        if (todosLosProductos.Count == 0)
+        {
+            totalPaginas = 1;
+            productosCatalogo = new List<Producto>();
+        }
+        else
+        {
+            totalPaginas = (int)Math.Ceiling(todosLosProductos.Count / (double)productosPorPagina);
+            CambiarPagina(1); // Aquí Blazor dibuja la pantalla, y el diccionario ya tiene los datos
+        }
+
+        ultimasVentas = await _context.Pedidos
+            .Include(p => p.Articulos)
+            .ThenInclude(a => a.Producto)
+            .Where(p => p.TipoDocumento == "Factura") 
+            .OrderByDescending(p => p.Id)
+            .Take(5)
             .ToListAsync();
 
-        productosCatalogo = todosLosProductos.Take(12).ToList();
-
-        var ventasHoy = await _context.Pedidos
-            .Where(x => x.FechaCreacion.Date == DateTime.Today)
-            .ToListAsync();
-
-        transaccionesDelDia = ventasHoy.Count;
+        transaccionesDelDia = ultimasVentas.Count;
+        ventasDelDia = ultimasVentas.Sum(v => v.Articulos?.Sum(a => a.PrecioUnitario * a.Cantidad) ?? 0);
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"🔥 ERROR AL CARGAR DATOS: {ex.Message}");
+        productosCatalogo = new List<Producto>();
+    }
+}
 
-    // =========================
-    // BUSCADOR
-    // =========================
+    private void CambiarPagina(int pagina)
+    {
+        if (todosLosProductos == null) return;
+        
+        paginaActual = pagina;
+        productosCatalogo = todosLosProductos
+            .Skip((paginaActual - 1) * productosPorPagina)
+            .Take(productosPorPagina)
+            .ToList();
+            
+        StateHasChanged(); // FUERZA LA ACTUALIZACIÓN VISUAL
+    }
 
     private void FiltrarProductos()
     {
         if (string.IsNullOrWhiteSpace(textoBusqueda))
         {
-            productosCatalogo =
-                todosLosProductos?.Take(12).ToList();
+            totalPaginas = (int)Math.Ceiling(todosLosProductos!.Count / (double)productosPorPagina);
+            CambiarPagina(1);
         }
         else
         {
-            productosCatalogo = todosLosProductos?
-                .Where(p =>
-                    p.Nombre.Contains(textoBusqueda,
-                    StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            var filtrados = todosLosProductos?
+                .Where(p => p.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
+                .ToList() ?? new List<Producto>();
+                
+            totalPaginas = (int)Math.Ceiling(filtrados.Count / (double)productosPorPagina);
+            if (totalPaginas == 0) totalPaginas = 1;
+            
+            paginaActual = 1;
+            productosCatalogo = filtrados.Take(productosPorPagina).ToList();
         }
     }
-
-    // =========================
-    // CARRITO
-    // =========================
 
     private void AgregarAlCarrito(Producto p)
     {
-        var existe = itemsFactura
-            .FirstOrDefault(x => x.Producto.Id == p.Id);
+        int cantidad = cantidadesTemp.ContainsKey(p.Id) ? cantidadesTemp[p.Id] : 1;
+        var existe = itemsFactura.FirstOrDefault(x => x.Producto.Id == p.Id);
 
         if (existe != null)
         {
-            existe.Cantidad++;
+            existe.Cantidad += cantidad;
         }
         else
         {
-            itemsFactura.Add(new ItemFactura
-            {
-                Producto = p
-            });
+            itemsFactura.Add(new ItemFactura { Producto = p, Cantidad = cantidad });
         }
+
+        cantidadesTemp[p.Id] = 1;
     }
 
-    private void SumarCantidad(ItemFactura item)
-    {
-        item.Cantidad++;
-    }
-
+    private void SumarCantidad(ItemFactura item) => item.Cantidad++;
+    
     private void RestarCantidad(ItemFactura item)
     {
-        if (item.Cantidad > 1)
-        {
-            item.Cantidad--;
-        }
-        else
-        {
-            itemsFactura.Remove(item);
-        }
+        if (item.Cantidad > 1) item.Cantidad--;
+        else itemsFactura.Remove(item);
     }
 
-    private void VaciarCarrito()
+    private void VaciarCarrito() => itemsFactura.Clear();
+
+    private async Task AbrirModalVenta()
     {
-        itemsFactura.Clear();
+        // camionesDisponibles = await _context.Camiones.Where(c => c.Disponible).ToListAsync(); // Descomentar cuando exista la tabla
+        mostrarModalVenta = true;
+        await JS.InvokeVoidAsync("document.body.classList.add", "modal-open");
     }
 
-    // =========================
-    // MODAL DELIVERY
-    // =========================
-
-    private async Task AbrirModalDelivery()
+    private async Task CerrarModalVenta()
     {
-        camionesDisponibles = await _context.Camiones
-            .Where(c => c.Disponible)
-            .ToListAsync();
-
-        mostrarModalDelivery = true;
+        mostrarModalVenta = false;
+        await JS.InvokeVoidAsync("document.body.classList.remove", "modal-open");
     }
 
-    private void MostrarCamiones()
-    {
-        usarDelivery = true;
-    }
-
-    private void CerrarModal()
-    {
-        mostrarModalDelivery = false;
-        usarDelivery = false;
-    }
-
-    // =========================
-    // VENTA SIN DELIVERY
-    // =========================
-
-    private async Task ProcesarVentaSinDelivery()
-    {
-        await ProcesarVenta(null);
-    }
-
-    // =========================
-    // VENTA CON DELIVERY
-    // =========================
-
-    private async Task SeleccionarCamion(int camionId)
-    {
-        await ProcesarVenta(camionId);
-    }
-
-    // =========================
-    // PROCESAR VENTA
-    // =========================
-
-    private async Task ProcesarVenta(int? camionId)
+    // NUEVO MÉTODO: Generar Cotización directamente desde el POS
+    private async Task GenerarCotizacionRapida()
     {
         try
         {
-            var cliente = await _context.Clientes
-                .FirstOrDefaultAsync();
+            var clienteGeneral = await _context.Clientes.FirstOrDefaultAsync(c => c.NombreCompleto == "Cliente General");
+            if(clienteGeneral == null)
+{
+    clienteGeneral = new Cliente 
+    { 
+        NombreCompleto = "Cliente General", 
+        Telefono = "N/A", 
+        CedulaRNC = "N/A",
+        DireccionEntrega = "N/A" // <--- ¡Esta es la línea que faltaba!
+    };
+    _context.Clientes.Add(clienteGeneral);
+    await _context.SaveChangesAsync();
+}
+
+            var nuevaCotizacion = new Pedido
+            {
+                FechaCreacion = DateTime.Now,
+                ClienteId = clienteGeneral.Id,
+                Estado = EstadoPedido.Pendiente,
+                TipoDocumento = "Cotizacion",
+                RequiereDelivery = false,
+                Articulos = itemsFactura.Select(i => new DetallePedido
+                {
+                    ProductoId = i.Producto.Id,
+                    Cantidad = i.Cantidad,
+                    PrecioUnitario = i.Producto.Precio
+                }).ToList()
+            };
+
+            _context.Pedidos.Add(nuevaCotizacion);
+            await _context.SaveChangesAsync();
+
+            VaciarCarrito();
+            
+            // Opcional: Redirigir a la vista de cotizaciones o mostrar un mensaje
+            Navigation.NavigateTo("/cotizaciones");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    private async Task ConfirmarVenta()
+    {
+        try
+        {
+            var nuevoCliente = new Cliente
+            {
+                NombreCompleto = string.IsNullOrWhiteSpace(clienteNombre) ? "Cliente General" : clienteNombre,
+                Telefono = string.IsNullOrWhiteSpace(clienteTelefono) ? "N/A" : clienteTelefono,
+                CedulaRNC = "00000000000",
+                DireccionEntrega = string.IsNullOrWhiteSpace(clienteDireccion) ? "Retiro en tienda" : clienteDireccion
+            };
+
+            _context.Clientes.Add(nuevoCliente);
+            await _context.SaveChangesAsync();
 
             var nuevaVenta = new Pedido
             {
                 FechaCreacion = DateTime.Now,
-
-                Estado = EstadoPedido.Completado,
-
-                Cliente = cliente!,
-
-                CamionAsignadoId = camionId,
-
-                Articulos = itemsFactura.Select(i =>
-                    new DetallePedido
-                    {
-                        ProductoId = i.Producto.Id,
-                        Cantidad = i.Cantidad
-                    }).ToList()
+                ClienteId = nuevoCliente.Id,
+                Estado = tipoEntrega == "Delivery" ? EstadoPedido.Pendiente : EstadoPedido.Completado,
+                TipoDocumento = "Factura", // Esencial definirlo
+                RequiereDelivery = tipoEntrega == "Delivery",
+                // CamionAsignadoId = tipoEntrega == "Delivery" ? camionSeleccionadoId : null, // Descomentar cuando exista
+                Articulos = itemsFactura.Select(i => new DetallePedido
+                {
+                    ProductoId = i.Producto.Id,
+                    Cantidad = i.Cantidad,
+                    PrecioUnitario = i.Producto.Precio
+                }).ToList()
             };
 
+            // Restar inventario
             foreach (var item in itemsFactura)
             {
-                var prodDb = await _context.Productos
-                    .FindAsync(item.Producto.Id);
-
-                if (prodDb != null)
-                {
-                    prodDb.Stock -= item.Cantidad;
-                }
+                var prodDb = await _context.Productos.FindAsync(item.Producto.Id);
+                if (prodDb != null) prodDb.Stock -= item.Cantidad;
             }
 
             _context.Pedidos.Add(nuevaVenta);
-
             await _context.SaveChangesAsync();
 
-            string numeroFactura =
-                "FAC-" + nuevaVenta.Id.ToString("D4");
-
-            await GenerarPdf(numeroFactura);
-
-            mensajeAlerta =
-                $"Venta {numeroFactura} completada";
-
-            itemsFactura.Clear();
-
-            CerrarModal();
-
+            VaciarCarrito();
+            await CerrarModalVenta();
             await CargarDatos();
         }
         catch (Exception ex)
         {
-            mensajeAlerta = ex.Message;
+            Console.WriteLine(ex.Message);
         }
     }
-
-    // =========================
-    // PDF
-    // =========================
-
-    private async Task GenerarPdf(string numeroFactura)
-    {
-        var factura = new Factura
-        {
-            NumeroFactura = numeroFactura,
-
-            Cliente = "Cliente Mostrador",
-
-            Fecha = DateTime.Now,
-
-            Subtotal = SubtotalVenta,
-
-            Itbis = ItbisVenta,
-
-            Detalles = itemsFactura.Select(i =>
-                new DetalleFactura
-                {
-                    Producto = i.Producto.Nombre,
-                    Cantidad = i.Cantidad,
-                    Precio = i.Producto.Precio,
-                    Subtotal = i.Subtotal
-                }).ToList()
-        };
-
-        var pdf = PdfService.GenerarFactura(factura);
-
-        var base64 = Convert.ToBase64String(pdf);
-
-        await JS.InvokeVoidAsync(
-            "downloadFile",
-            $"{numeroFactura}.pdf",
-            base64);
-    }
 }
+
+<style>
+/* =========================
+   LAYOUT GENERAL
+========================= */
+.business-layout {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background: #f4f6fb;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px; /* Tamaño base reducido */
+}
+
+/* =========================
+   SIDEBAR
+========================= */
+.sidebar {
+    width: 240px; /* Reducido de 280px */
+    background: #0f172a; /* Azul oscuro más moderno y neutro */
+    color: white;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 30px;
+}
+
+.logo-icon {
+    width: 45px; /* Reducido */
+    height: 45px;
+    border-radius: 12px;
+    background: #eab308; /* Amarillo más sutil */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+
+.logo-section h1 {
+    margin: 0;
+    font-size: 18px; /* Reducido */
+    font-weight: 700;
+}
+
+.logo-section span {
+    color: #eab308;
+    font-size: 12px;
+}
+
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Reducido */
+}
+
+.menu-item {
+    padding: 12px 16px; /* Reducido */
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px; /* Reducido de 17px */
+    transition: all 0.2s;
+    color: #cbd5e1;
+    text-decoration: none;
+}
+
+.menu-item:hover {
+    background: rgba(255,255,255,.05);
+    color: white;
+}
+
+.menu-item.active {
+    background: #eab308;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+/* =========================
+   RESUMEN (Sidebar)
+========================= */
+.resume-card {
+    background: rgba(255,255,255,.05);
+    border-radius: 16px;
+    padding: 16px;
+    margin-top: auto; /* Empuja hacia abajo */
+}
+
+.resume-card h3 {
+    font-size: 13px;
+    margin-bottom: 15px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.resume-item { margin-bottom: 12px; }
+.resume-item span { display: block; color: #cbd5e1; font-size: 12px; margin-bottom: 2px; }
+.resume-item strong { font-size: 16px; color: #22c55e; } /* Verde moderno */
+
+/* =========================
+   MAIN
+========================= */
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+    height: 100vh;
+    padding: 20px 30px; /* Reducido */
+}
+
+/* =========================
+   TOPBAR
+========================= */
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px; /* Reducido */
+}
+
+.topbar h2 {
+    font-size: 24px; /* Reducido de 48px */
+    margin: 0;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.topbar p {
+    color: #64748b;
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.topbar-right { display: flex; gap: 15px; }
+
+.info-box, .user-box {
+    background: white;
+    padding: 10px 16px; /* Reducido */
+    border-radius: 12px;
+    border: 1px solid #e2e8f0; /* Borde sutil en lugar de sombra fuerte */
+    display: flex;
+    align-items: center;
+}
+
+.info-box { flex-direction: column; align-items: flex-end; }
+.info-box small { color: #64748b; font-size: 11px; }
+.info-box strong { font-size: 14px; color: #0f172a; }
+
+.user-box { gap: 10px; }
+.avatar { width: 36px; height: 36px; font-size: 18px; border-radius: 10px; }
+.user-box strong { font-size: 13px; display: block; color: #0f172a;}
+.user-box p { font-size: 11px; margin:0; color: #64748b; }
+
+/* =========================
+   GRID PRINCIPAL
+========================= */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px; /* Panel derecho más estrecho (era 420px) */
+    gap: 20px;
+}
+
+/* =========================
+   PRODUCTOS
+========================= */
+.search-bar {
+    background: white;
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+.search-bar input { border: none; outline: none; width: 100%; font-size: 14px; }
+.search-icon { font-size: 16px; color: #94a3b8; }
+
+.categories {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.cat-btn {
+    border: 1px solid #e2e8f0;
+    background: white;
+    padding: 8px 16px;
+    border-radius: 20px; /* Estilo píldora */
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13px;
+    color: #475569;
+    transition: 0.2s;
+}
+
+.cat-btn.active, .cat-btn:hover {
+    background: #0f172a;
+    color: white;
+    border-color: #0f172a;
+}
+
+/* =========================
+   GRID PRODUCTOS
+========================= */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Tarjetas más pequeñas */
+    gap: 15px;
+}
+
+.product-card {
+    background: white;
+    border-radius: 16px;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    transition: 0.2s;
+}
+
+.product-card:hover { border-color: #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+
+.product-image-container {
+    height: 120px; /* Reducido de 180px */
+    border-radius: 10px;
+    background: #f8fafc;
+    margin-bottom: 12px;
+    padding: 10px;
+}
+
+.product-image-container img { width: 100%; height: 100%; object-fit: contain; }
+
+.product-info h4 { font-size: 13px; margin-bottom: 6px; min-height: 38px; color: #1e293b; line-height: 1.3;}
+.price { color: #0f172a; font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.stock { background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-size: 11px; margin-bottom: 10px; display: inline-block; color: #475569;}
+
+.quantity-add { display: flex; gap: 8px; }
+.qty-input { width: 60px; border-radius: 8px; border: 1px solid #e2e8f0; padding: 6px; font-size: 13px; text-align: center;}
+.add-btn { flex: 1; border: none; border-radius: 8px; background: #0f172a; color: white; font-size: 18px; cursor: pointer; display:flex; align-items:center; justify-content:center;}
+.add-btn:hover { background: #1e293b; }
+
+/* =========================
+   PAGINACION
+========================= */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 25px;
+}
+
+.page-btn {
+    width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e2e8f0;
+    background: white; font-weight: 500; font-size: 13px; cursor: pointer; color: #475569;
+}
+.active-page { background: #0f172a; color: white; border-color: #0f172a;}
+
+/* =========================
+   CARRITO (Panel Derecho)
+========================= */
+.cart-section {
+    position: sticky;
+    top: 20px;
+    height: calc(100vh - 40px);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.cart-card, .sales-history {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+.cart-card { display: flex; flex-direction: column; flex: 1; max-height: 70vh;}
+
+.cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.cart-header h3 { font-size: 16px; margin: 0; color: #0f172a;}
+.cart-count { background: #ef4444; color: white; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 10px; }
+
+.cart-items { flex: 1; overflow-y: auto; padding-right: 5px; }
+.cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #e2e8f0; }
+.cart-item h4 { font-size: 13px; margin: 0 0 4px 0; color: #334155;}
+.cart-item p { font-size: 13px; margin: 0; font-weight: 600; color: #0f172a;}
+
+.qty-box { display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 4px; border-radius: 8px;}
+.qty-box button { width: 24px; height: 24px; border: none; border-radius: 6px; background: white; cursor: pointer; font-weight:bold; box-shadow: 0 1px 2px rgba(0,0,0,.05);}
+.qty-box span { font-size: 13px; font-weight: 600; min-width: 16px; text-align: center;}
+
+.totals { margin-top: 15px; padding-top: 15px; border-top: 2px solid #f1f5f9; }
+.totals div { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: #475569;}
+.grand-total { align-items: center; margin-top: 10px; }
+.grand-total span { font-weight: bold; font-size: 14px; color: #0f172a;}
+.grand-total h2 { color: #22c55e; font-size: 24px; margin: 0; }
+
+.cart-buttons { display: flex; gap: 10px; margin-top: 15px; }
+.clear-btn, .quote-btn, .pay-btn {
+    flex: 1; border: none; padding: 10px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; color: white;
+}
+.clear-btn { background: #ef4444; flex: 0.5;}
+.quote-btn { background: #f59e0b; }
+.pay-btn { background: #22c55e; }
+.quote-btn:disabled, .pay-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* =========================
+   HISTORIAL VENTAS
+========================= */
+.sales-history { flex: 0 0 auto; }
+.sales-header h3 { font-size: 14px; margin: 0 0 10px 0; color: #0f172a;}
+.sales-history table { width: 100%; text-align: left; border-collapse: collapse;}
+.sales-history th { font-size: 12px; color: #64748b; padding-bottom: 8px; font-weight: 500;}
+.sales-history td { font-size: 13px; padding: 6px 0; color: #334155; border-top: 1px solid #f1f5f9;}
+
+/* =========================
+   MODAL
+========================= */
+.modal-overlay {
+    position: fixed; inset: 0; background: rgba(15,23,42,.6); display: flex; align-items: center; justify-content: center; z-index: 999; backdrop-filter: blur(2px);
+}
+.sale-modal {
+    width: 600px; background: white; border-radius: 16px; display: flex; flex-direction: column; max-height: 90vh;
+}
+.modal-header { padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;}
+.modal-header h2 { margin: 0; font-size: 20px; color: #0f172a;}
+.modal-header p { margin: 4px 0 0 0; font-size: 13px; color: #64748b;}
+.close-modal-btn { background: transparent; border: none; font-size: 20px; cursor: pointer; color: #94a3b8;}
+
+.modal-body { padding: 20px; overflow-y: auto; background: #f8fafc;}
+.section-box { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #e2e8f0;}
+.section-box h3 { margin: 0 0 15px 0; font-size: 15px; color: #1e293b;}
+.section-box input, .section-box textarea, .section-box select {
+    width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; margin-bottom: 10px; font-size: 13px; outline:none;
+}
+.section-box input:focus { border-color: #3b82f6; }
+.section-box textarea { min-height: 60px; resize: vertical; }
+
+.delivery-options, .payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom:10px;}
+.payment-grid { grid-template-columns: 1fr 1fr 1fr; }
+.delivery-option, .pay-method {
+    border: 1px solid #e2e8f0; background: white; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: #475569; transition: 0.2s;
+}
+.active-delivery, .active-pay { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; font-weight: 600;}
+
+.modal-footer { padding: 15px 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px;}
+.cancel-sale-btn { background: white; border: 1px solid #cbd5e1; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500;}
+.confirm-sale-btn { background: #22c55e; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;}
+
+</style>

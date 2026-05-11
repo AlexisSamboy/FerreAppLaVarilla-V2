@@ -31,6 +31,10 @@ namespace FerreAppLaVarilla.UI.Models
         public int? CamionAsignadoId { get; set; }
         public Camion? CamionAsignado { get; set; }
 
+        public bool RequiereDelivery { get; set; }
+
+        public string TipoDocumento { get; set; } = "Factura";
+
         // =========================
         // DETALLES
         // =========================

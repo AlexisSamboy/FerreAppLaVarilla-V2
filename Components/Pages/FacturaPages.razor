@@ -1,48 +1,372 @@
-﻿@page "/factura"
+﻿@page "/facturas"
+@rendermode InteractiveServer
+
+@using Microsoft.EntityFrameworkCore
 @using FerreAppLaVarilla.UI.Models
+@using FerreAppLaVarilla.UI.Data
 @using FerreAppLaVarilla.UI.Services
 
+@inject ApplicationDbContext _context
 @inject PdfService PdfService
 @inject IJSRuntime JS
 
-<button @onclick="DescargarFactura">
-    Descargar Factura PDF
-</button>
+<PageTitle>Historial de Facturas - FerreApp</PageTitle>
+
+<div class="business-layout">
+
+    <aside class="sidebar">
+        <div class="logo-section">
+            <div class="logo-icon">⚡</div>
+            <div>
+                <h1>FerreApp</h1>
+                <span>La Varilla</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-menu">
+            <NavLink class="menu-item" href="PuntoDeVenta">
+                🛒 Punto de Venta
+            </NavLink>
+            <NavLink class="menu-item" href="cotizaciones">
+                📄 Cotizaciones
+            </NavLink>
+            <NavLink class="menu-item" href="Clientes">
+                👥 Clientes
+            </NavLink>
+            <NavLink class="menu-item" href="Productos">
+                📦 Productos
+            </NavLink>
+            <NavLink class="menu-item" href="Inventario">
+                📊 Inventario
+            </NavLink>
+            <NavLink class="menu-item" href="Reportes">
+                📈 Reportes
+            </NavLink>
+            <NavLink class="menu-item active" href="facturas">
+                🧾 Facturas
+            </NavLink>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        
+        <header class="topbar">
+            <div>
+                <h2>Historial de Facturas</h2>
+                <p>Registro de todas las ventas procesadas en el sistema</p>
+            </div>
+            
+            <div class="topbar-right">
+                <div class="info-box">
+                    <small>Hora Actual</small>
+                    <strong>@DateTime.Now.ToString("hh:mm tt")</strong>
+                </div>
+                <div class="user-box">
+                    <div class="avatar">👨</div>
+                    <div>
+                        <strong>Administrador</strong>
+                        <p>Gestión</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <section class="table-section">
+            <div class="table-container">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>N° Factura</th>
+                            <th>Cliente</th>
+                            <th>Fecha y Hora</th>
+                            <th>Total</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (listaFacturas == null)
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center" style="padding: 40px;">
+                                    Cargando facturas...
+                                </td>
+                            </tr>
+                        }
+                        else if (!listaFacturas.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center" style="padding: 40px;">
+                                    No hay facturas registradas en el sistema.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var pedido in listaFacturas)
+                            {
+                                <tr>
+                                    <td><strong>FAC-@pedido.Id.ToString("D4")</strong></td>
+                                    <td>@(pedido.Cliente?.NombreCompleto ?? "Cliente General")</td>
+                                    <td>@pedido.FechaCreacion.ToString("dd/MM/yyyy • hh:mm tt")</td>
+                                    
+                                    @{
+                                        var totalVenta = pedido.Articulos?.Sum(a => a.PrecioUnitario * a.Cantidad) ?? 0;
+                                        var totalConItbis = totalVenta + (totalVenta * 0.18m);
+                                    }
+                                    
+                                    <td><strong class="text-success">RD$ @totalConItbis.ToString("N2")</strong></td>
+                                    <td class="text-center">
+                                        <button class="pdf-btn" @onclick="() => GenerarYAbrirPdf(pedido)">
+                                            📄 Ver PDF
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+</div>
 
 @code {
+    private List<Pedido>? listaFacturas;
 
-    private async Task DescargarFactura()
+    protected override async Task OnInitializedAsync()
     {
-        var factura = new Factura
+        listaFacturas = await _context.Pedidos
+            .Include(p => p.Cliente)
+            .Include(p => p.Articulos)
+                .ThenInclude(a => a.Producto)
+            .Where(p => p.TipoDocumento == "Factura")
+            .OrderByDescending(p => p.Id)
+            .ToListAsync();
+    }
+
+    private async Task GenerarYAbrirPdf(Pedido pedidoDb)
+    {
+        try
         {
-            NumeroFactura = "FAC-0001",
-            Cliente = "Juan Pérez",
-            CedulaRnc = "001-1234567-8",
-            Fecha = DateTime.Now,
+            var subtotal = pedidoDb.Articulos?.Sum(a => a.PrecioUnitario * a.Cantidad) ?? 0;
+            var itbis = subtotal * 0.18m;
 
-            Subtotal = 5000,
-            Itbis = 900,
-
-            Detalles = new List<DetalleFactura>
+            var modeloFacturaPdf = new Factura
             {
-                new DetalleFactura
+                NumeroFactura = $"FAC-{pedidoDb.Id:D4}",
+                Cliente = pedidoDb.Cliente?.NombreCompleto ?? "Cliente General",
+                CedulaRnc = pedidoDb.Cliente?.CedulaRNC ?? "N/A",
+                Fecha = pedidoDb.FechaCreacion,
+                Subtotal = subtotal,
+                Itbis = itbis,
+                Detalles = pedidoDb.Articulos?.Select(a => new DetalleFactura
                 {
-                    Producto = "Taladro",
-                    Cantidad = 1,
-                    Precio = 5000,
-                    Subtotal = 5000
-                }
-            }
-        };
+                    Producto = a.Producto?.Nombre ?? "Producto Desconocido",
+                    Cantidad = a.Cantidad,
+                    Precio = a.PrecioUnitario,
+                    Subtotal = a.PrecioUnitario * a.Cantidad
+                }).ToList() ?? new List<DetalleFactura>()
+            };
 
-        var pdfBytes = PdfService.GenerarFactura(factura);
+            var pdfBytes = PdfService.GenerarFactura(modeloFacturaPdf);
+            var base64 = Convert.ToBase64String(pdfBytes);
 
-        var base64 = Convert.ToBase64String(pdfBytes);
-
-        await JS.InvokeVoidAsync(
-            "downloadFile",
-            "factura.pdf",
-            base64
-        );
+            await JS.InvokeVoidAsync("abrirPdfEnPestana", base64);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al generar PDF: {ex.Message}");
+        }
     }
 }
+
+<style>
+/* =========================
+   LAYOUT GENERAL (Igual a POS)
+========================= */
+.business-layout {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background: #f4f6fb;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+}
+
+/* =========================
+   SIDEBAR
+========================= */
+.sidebar {
+    width: 240px;
+    background: #0f172a;
+    color: white;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 30px;
+}
+
+.logo-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    background: #eab308;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+
+.logo-section h1 { margin: 0; font-size: 18px; font-weight: 700; }
+.logo-section span { color: #eab308; font-size: 12px; }
+
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.menu-item {
+    padding: 12px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.2s;
+    color: #cbd5e1;
+    text-decoration: none;
+}
+
+.menu-item:hover {
+    background: rgba(255,255,255,.05);
+    color: white;
+}
+
+.menu-item.active {
+    background: #eab308;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+/* =========================
+   MAIN & TOPBAR
+========================= */
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+    height: 100vh;
+    padding: 20px 30px;
+}
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.topbar h2 { margin: 0; font-size: 24px; font-weight: 700; color: #1e293b; }
+.topbar p { color: #64748b; font-size: 13px; margin-top: 4px; }
+
+.topbar-right { display: flex; gap: 15px; }
+
+.info-box, .user-box {
+    background: white;
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+}
+
+.info-box { flex-direction: column; align-items: flex-end; }
+.info-box small { color: #64748b; font-size: 11px; }
+.info-box strong { font-size: 14px; color: #0f172a; }
+
+.user-box { gap: 10px; }
+.avatar { width: 36px; height: 36px; font-size: 18px; border-radius: 10px; background:#f1f5f9; display:flex; align-items:center; justify-content:center;}
+.user-box strong { font-size: 13px; display: block; color: #0f172a;}
+.user-box p { font-size: 11px; margin:0; color: #64748b; }
+
+/* =========================
+   TABLA MODERNA
+========================= */
+.table-section {
+    animation: fadeIn 0.3s ease;
+}
+
+.table-container {
+    background: white;
+    border-radius: 16px;
+    padding: 5px; /* Reducido para que la tabla llegue más a los bordes */
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.modern-table th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    padding: 16px 20px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.modern-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 14px;
+    color: #334155;
+    vertical-align: middle;
+}
+
+.modern-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.text-center { text-align: center !important; }
+.text-success { color: #16a34a; }
+
+/* =========================
+   BOTONES
+========================= */
+.pdf-btn {
+    background: #eab308; 
+    color: #0f172a; 
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.pdf-btn:hover {
+    background: #ca8a04;
+    color: white;
+}
+
+@@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
