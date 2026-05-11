@@ -9,202 +9,163 @@
 @inject AutenticacionService AuthService
 @inject NavigationManager Navigation
 
-<PageTitle>Login - FerreAppLaVarilla</PageTitle>
+<PageTitle>Login - FerreApp La Varilla</PageTitle>
 
-<div class="login-page">
-
-    <!-- PANEL IZQUIERDO -->
-    <section class="left-panel">
-
-        <div class="overlay"></div>
-
-        <div class="left-content">
-
-            <div class="logo">
-                <span class="icon">⚡</span>
-
-                <h1>
-                    FerreApp<span>LaVarilla</span>
-                </h1>
-            </div>
-
-            <div class="hero-text">
-
-                <h2>
-                    Tu ferretería <br />
-                    de confianza, <br />
-                    <span>siempre contigo.</span>
-                </h2>
-
-                <div class="line"></div>
-
-                <p>
-                    Compra materiales, herramientas y productos
-                    de construcción desde cualquier lugar.
+<div class="main-auth-container">
+    <div class="glass-card">
+        
+        <div class="auth-sidebar">
+            <div class="auth-sidebar-content">
+                <div class="brand-zone">
+                    <div class="logo-bolt">⚡</div>
+                    <div class="brand-names">
+                        <h1>FerreApp</h1>
+                        <h2>LaVarilla</h2>
+                    </div>
+                </div>
+                
+                <p class="tagline">FERRETERÍA • CONSTRUCCIÓN • HOGAR</p>
+                <div class="yellow-line"></div>
+                
+                <p class="auth-description">
+                    Inicia sesión para acceder a nuestro catálogo, realizar compras, gestionar tus pedidos y mucho más.
                 </p>
 
-            </div>
-
-            <div class="features">
-
-                <div class="feature">
-                    🛡️ Productos garantizados
+                <div class="warehouse-illustration">
+                    <img src="/images/pasillos.png" alt="Ferreteria">
                 </div>
 
-                <div class="feature">
-                    🚚 Entregas rápidas
+                <div class="features-footer">
+                    <div class="feature">
+                        <span>🛡️</span>
+                        <p>Compra<br>segura</p>
+                    </div>
+                    <div class="feature">
+                        <span>📦</span>
+                        <p>Amplio<br>inventario</p>
+                    </div>
+                    <div class="feature">
+                        <span>🎧</span>
+                        <p>Soporte<br>dedicado</p>
+                    </div>
                 </div>
-
-                <div class="feature">
-                    🎧 Atención personalizada
-                </div>
-
             </div>
-
-            <div class="footer-text">
-                © 2026 FerreAppLaVarilla
-            </div>
-
         </div>
 
-    </section>
-
-    <!-- PANEL DERECHO -->
-
-    <section class="right-panel">
-
-        <div class="login-card">
-
-            <div class="login-icon">
-                🔒
-            </div>
-
-            <h2>Bienvenido</h2>
-
-            <p class="subtitle">
-                Inicia sesión para continuar
-            </p>
-
-            <EditForm Model="this" OnValidSubmit="IniciarSesion">
-
-                <DataAnnotationsValidator />
-
-                <div class="form-group">
-
-                    <label>Correo electrónico</label>
-
-                    <InputText @bind-Value="correo"
-                               class="form-control"
-                               placeholder="Ingresa tu correo" />
-
-                </div>
-
-                <div class="form-group">
-
-                    <label>Contraseña</label>
-
-                    <InputText type="password"
-                               @bind-Value="clave"
-                               class="form-control"
-                               placeholder="Ingresa tu contraseña" />
-
-                </div>
-
-                @if (!string.IsNullOrEmpty(mensajeError))
-                {
-                    <div class="error-message">
-                        ⚠️ @mensajeError
-                    </div>
-                }
-
-                <div class="options">
-
-                    <label class="remember">
-                        <input type="checkbox" />
-                        Recordarme
-                    </label>
-
-                    <a href="#">
-                        ¿Olvidaste tu contraseña?
-                    </a>
-
-                </div>
-
-                <button type="submit"
-                        class="login-btn"
-                        disabled="@cargando">
-
-                    @if (cargando)
-                    {
-                        <span>Ingresando...</span>
-                    }
-                    else
-                    {
-                        <span>Iniciar sesión</span>
-                    }
-
-                </button>
-
-            </EditForm>
-
-            <div class="divider">
-                ¿No tienes cuenta?
-            </div>
-
-            <button class="register-btn"
-                    @onclick="IrARegistro">
-
-                Crear cuenta nueva
-
+        <div class="auth-form-section">
+            
+            <button type="button" class="btn-back-home" @onclick='() => Navigation.NavigateTo("/")'>
+                🏠 Volver al inicio
             </button>
 
+            <div class="form-container">
+                
+                <div class="form-header">
+                    <div class="login-icon-top">🔒</div>
+                    <h2>Bienvenido</h2>
+                    <p>Inicia sesión para continuar</p>
+                </div>
+
+                <EditForm Model="this" OnValidSubmit="IniciarSesion">
+                    <DataAnnotationsValidator />
+
+                    @if (!string.IsNullOrEmpty(mensajeError))
+                    {
+                        <div class="alert error">
+                            @mensajeError
+                        </div>
+                    }
+
+                    <div class="inputs-grid single-col">
+                        
+                        <div class="input-box">
+                            <label>Correo electrónico</label>
+                            <div class="field">
+                                <span class="input-icon">✉️</span>
+                                <InputText @bind-Value="correo" placeholder="Ingresa tu correo" class="form-control" type="email" />
+                            </div>
+                        </div>
+
+                        <div class="input-box">
+                            <label>Contraseña</label>
+                            <div class="field">
+                                <span class="input-icon">🔑</span>
+                                <InputText @bind-Value="clave" type="password" placeholder="Ingresa tu contraseña" class="form-control" />
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="options-row">
+                        <label class="remember-me">
+                            <input type="checkbox" />
+                            <span>Recordarme</span>
+                        </label>
+                        <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
+                    </div>
+
+                    <button type="submit" class="btn-primary" disabled="@cargando">
+                        @if (cargando)
+                        {
+                            <span>⏳ Ingresando...</span>
+                        }
+                        else
+                        {
+                            <span>Iniciar sesión</span>
+                        }
+                    </button>
+
+                    <div class="login-link">
+                        <p>¿No tienes cuenta?</p>
+                        <button type="button" class="btn-secondary-outline" @onclick="IrARegistro">
+                            👤 Crear cuenta nueva
+                        </button>
+                    </div>
+
+                </EditForm>
+            </div>
         </div>
 
-    </section>
-
+    </div>
 </div>
 
 @code {
-
     private string correo = "";
     private string clave = "";
-
     private string mensajeError = "";
-
     private bool cargando = false;
 
     private async Task IniciarSesion()
     {
         cargando = true;
-
         mensajeError = "";
 
-        await Task.Delay(1000);
+        await Task.Delay(1000); 
 
         var usuario = DbContext.Usuarios.FirstOrDefault(
-            u => u.Correo == correo &&
-                 u.Password == clave
+            u => u.Correo == correo && u.Password == clave
         );
 
         if (usuario != null)
         {
             AuthService.MarcarUsuarioComoAutenticado(usuario);
 
-            // LÓGICA DE REDIRECCIÓN POR ROL
             if (usuario.Rol == "Admin")
             {
                 Navigation.NavigateTo("/panel-admin");
             }
             else if (usuario.Rol == "Cajero")
             {
-				// Cjaero va directo al punto de venta
                 Navigation.NavigateTo("/PuntoDeVenta");
+            }
+            else if (usuario.Rol == "Cliente")
+            {
+                Navigation.NavigateTo("/mi-tienda");
             }
             else
             {
-                // Si es un cliente normal o rol "Usuario"
                 Navigation.NavigateTo("/");
-            }
+            } 
         }
         else
         {
@@ -218,5 +179,131 @@
     {
         Navigation.NavigateTo("/registro");
     }
-
 }
+
+<style>
+    /* Estilos del contenedor y tarjeta */
+    .main-auth-container {
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: radial-gradient(circle at center, #1e3a8a 0%, #0f172a 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    .glass-card {
+        width: 1100px;
+        height: 700px;
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 30px;
+        display: flex;
+        overflow: hidden;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .auth-sidebar {
+        flex: 1;
+        background: #021b46;
+        color: white;
+        padding: 50px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .auth-sidebar-content { display: flex; flex-direction: column; height: 100%; }
+
+    .brand-zone { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+    .logo-bolt {
+        font-size: 40px; background: #fbce07; color: #021b46;
+        width: 60px; height: 60px; border-radius: 15px;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .brand-names h1 { margin: 0; font-size: 36px; font-weight: 800; line-height: 1; color: white; }
+    .brand-names h2 { margin: 0; font-size: 24px; color: #fbce07; font-weight: 400; }
+
+    .tagline { font-size: 11px; letter-spacing: 2px; color: #94a3b8; margin: 10px 0; }
+    .yellow-line { width: 60px; height: 4px; background: #fbce07; margin-bottom: 25px; }
+    .auth-description { font-size: 14px; line-height: 1.6; color: #cbd5e1; margin-bottom: 25px; }
+
+    .warehouse-illustration {
+        flex: 1; opacity: 0.2; background: #000; border-radius: 20px; overflow: hidden;
+    }
+    .warehouse-illustration img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%); }
+
+    .features-footer { display: flex; justify-content: space-between; margin-top: 25px; }
+    .feature { text-align: center; }
+    .feature span { font-size: 24px; display: block; margin-bottom: 5px; }
+    .feature p { font-size: 12px; color: #94a3b8; line-height: 1.2; margin: 0;}
+
+    /* Formulario */
+    .auth-form-section { flex: 1.5; padding: 40px 80px; display: flex; align-items: center; justify-content: center; position: relative;}
+    .form-container { width: 100%; max-width: 420px; }
+    
+    .form-header { text-align: center; margin-bottom: 35px; }
+    .login-icon-top {
+        width: 60px; height: 60px; background: #f8fafc; border: 1px solid #e2e8f0;
+        border-radius: 16px; display: flex; align-items: center; justify-content: center;
+        font-size: 28px; margin: 0 auto 15px auto; box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    }
+    .form-header h2 { font-size: 34px; font-weight: 800; color: #0f172a; margin: 0 0 8px 0; }
+    .form-header p { color: #64748b; font-size: 15px; margin: 0;}
+
+    .inputs-grid.single-col { display: flex; flex-direction: column; gap: 20px; }
+    .input-box label { display: block; font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 8px; }
+    .field { position: relative; display: flex; align-items: center; }
+    .input-icon { position: absolute; left: 16px; font-size: 16px; color: #94a3b8; z-index: 10; }
+    
+    .field input {
+        width: 100%; padding: 14px 16px 14px 45px;
+        border: 1px solid #e2e8f0; border-radius: 12px;
+        background: #f8fafc; font-size: 15px; outline: none; transition: 0.3s;
+        color: #334155; position: relative; z-index: 5;
+    }
+    .field input:focus { border-color: #1e3a8a; box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1); background: white;}
+
+    .options-row { display: flex; justify-content: space-between; align-items: center; margin: 20px 0 30px 0; font-size: 14px; }
+    .remember-me { display: flex; align-items: center; gap: 8px; color: #475569; cursor: pointer; }
+    .forgot-password { color: #2563eb; text-decoration: none; font-weight: 600; }
+
+    .btn-primary {
+        width: 100%; background: #021b46; color: white; border: none;
+        padding: 16px; border-radius: 12px; font-weight: 700; font-size: 16px;
+        cursor: pointer; transition: 0.2s; margin-bottom: 25px;
+    }
+    .btn-primary:hover { background: #052c6d; transform: translateY(-2px); }
+
+    .login-link { text-align: center; border-top: 1px solid #e2e8f0; padding-top: 25px; }
+    .btn-secondary-outline {
+        width: 100%; background: white; color: #021b46; border: 1px solid #021b46;
+        padding: 14px; border-radius: 12px; font-weight: 600; font-size: 15px; cursor: pointer;
+    }
+    .alert.error { background: #fef2f2; color: #dc2626; padding: 12px; border-radius: 10px; margin-bottom: 20px; font-size: 14px; border: 1px solid #fecaca; text-align:center; }
+
+    /* BOTÓN VOLVER AL INICIO */
+    .btn-back-home {
+        position: absolute;
+        top: 30px;
+        right: 30px;
+        background: #f1f5f9;
+        border: none;
+        color: #475569;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        z-index: 1000;
+    }
+    .btn-back-home:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+</style>

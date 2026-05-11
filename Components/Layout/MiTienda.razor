@@ -1,0 +1,378 @@
+﻿@page "/mi-tienda"
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using FerreAppLaVarilla.UI.Models
+@using FerreAppLaVarilla.UI.Data
+@using System.Security.Claims
+
+@attribute [Authorize(Roles = "Cliente")]
+
+@inject ApplicationDbContext _context
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Mi Panel - FerreApp La Varilla</PageTitle>
+
+<div class="business-layout">
+
+    <aside class="sidebar">
+        <div class="logo-section">
+            <div class="logo-icon">⚡</div>
+            <div>
+                <h1>FerreApp</h1>
+                <span>La Varilla</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-menu">
+            <button class="menu-item @(vistaActual == "Tienda" ? "active" : "")" @onclick='() => CambiarVista("Tienda")'>
+                🛒 Tienda y Catálogo
+            </button>
+            <button class="menu-item @(vistaActual == "Pedidos" ? "active" : "")" @onclick='() => CambiarVista("Pedidos")'>
+                📦 Mis Pedidos
+            </button>
+            <button class="menu-item @(vistaActual == "Perfil" ? "active" : "")" @onclick='() => CambiarVista("Perfil")'>
+                ⚙️ Mi Perfil
+            </button>
+            
+            <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 15px 0;"></div>
+            
+            <button class="menu-item text-danger" style="color: #ef4444;" @onclick="CerrarSesion">
+                🚪 Cerrar Sesión
+            </button>
+        </nav>
+        
+        <div class="resume-card mt-auto">
+            <h3>Soporte Técnico</h3>
+            <p style="font-size: 12px; color: #94a3b8;">¿Necesitas ayuda con tu pedido?</p>
+            <button class="btn-support">💬 Contactar a ventas</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        
+        <header class="topbar">
+            <div>
+                @if (vistaActual == "Tienda") {
+                    <h2>Catálogo de Productos</h2>
+                    <p>Agrega los materiales que necesitas a tu carrito</p>
+                } else if (vistaActual == "Pedidos") {
+                    <h2>Historial de Compras</h2>
+                    <p>Revisa el estado de tus pedidos y cotizaciones</p>
+                } else {
+                    <h2>Mi Perfil</h2>
+                    <p>Actualiza tu información personal y de entrega</p>
+                }
+            </div>
+            
+            <div class="topbar-right">
+                <div class="user-box">
+                    <div class="avatar">👤</div>
+                    <div>
+                        <strong>@nombreCliente</strong>
+                        <p>Cliente VIP</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-wrapper @(vistaActual == "Tienda" ? "has-cart" : "")">
+            
+            @if (vistaActual == "Tienda")
+            {
+                <div class="products-area">
+                    <div class="filters mb-4">
+                        <input type="text" placeholder="🔍 Buscar herramientas, materiales..." @bind="textoBusqueda" @bind:event="oninput" @onkeyup="FiltrarProductos" class="search-input" />
+                    </div>
+
+                    <div class="products-grid">
+                        @if (productosCatalogo == null)
+                        {
+                            <p>Cargando catálogo...</p>
+                        }
+                        else
+                        {
+                            @foreach (var prod in productosCatalogo)
+                            {
+                                <div class="product-card">
+                                    <div class="product-image-container">
+                                        <img src="images/@(string.IsNullOrEmpty(prod.ImagenUrl) ? "default.png" : prod.ImagenUrl)" onerror="this.src='images/default.png'" />
+                                    </div>
+                                    <div class="product-info">
+                                        <h4>@prod.Nombre</h4>
+                                        <p class="price">RD$ @prod.Precio.ToString("N2")</p>
+                                        <div class="action-row">
+                                            <span class="stock">Disp: @prod.Stock</span>
+                                            <button class="add-btn-sm" @onclick="() => AgregarAlCarrito(prod)">+ Agregar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+
+                <div class="cart-section">
+                    <div class="cart-card glass-panel">
+                        <div class="cart-header">
+                            <h3>🛒 Mi Carrito</h3>
+                            <span class="cart-count">@carrito.Sum(x => x.Cantidad)</span>
+                        </div>
+
+                        <div class="cart-items">
+                            @if (!carrito.Any())
+                            {
+                                <div class="empty-cart-msg">
+                                    <span style="font-size: 30px;">🛍️</span>
+                                    <p>Tu carrito está vacío</p>
+                                </div>
+                            }
+                            @foreach (var item in carrito)
+                            {
+                                <div class="cart-item">
+                                    <div class="item-details">
+                                        <h4>@item.Producto.Nombre</h4>
+                                        <p>RD$ @item.Producto.Precio.ToString("N2")</p>
+                                    </div>
+                                    <div class="qty-controls">
+                                        <button @onclick="() => RestarCantidad(item)">-</button>
+                                        <span>@item.Cantidad</span>
+                                        <button @onclick="() => SumarCantidad(item)">+</button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="totals">
+                            <div><span>Subtotal</span><strong>RD$ @Subtotal.ToString("N2")</strong></div>
+                            <div><span>ITBIS (18%)</span><strong>RD$ @Itbis.ToString("N2")</strong></div>
+                            <div class="grand-total"><span>Total</span><h2>RD$ @Total.ToString("N2")</h2></div>
+                        </div>
+
+                        <button class="checkout-btn" disabled="@(!carrito.Any())" @onclick="ProcesarPedido">
+                            ✅ Solicitar Pedido
+                        </button>
+                    </div>
+                </div>
+            }
+
+            @if (vistaActual == "Pedidos")
+            {
+                <div class="full-width-panel glass-panel">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>N° Pedido</th>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!misPedidos.Any())
+                            {
+                                <tr><td colspan="5" class="text-center">No has realizado ninguna compra aún.</td></tr>
+                            }
+                            @foreach (var ped in misPedidos)
+                            {
+                                <tr>
+                                    <td><strong>#@ped.Id.ToString("D4")</strong></td>
+                                    <td>@ped.FechaCreacion.ToString("dd/MM/yyyy")</td>
+                                    <td>@ped.TipoDocumento</td>
+                                    <td><strong>RD$ @((ped.Articulos?.Sum(a => a.PrecioUnitario * a.Cantidad * 1.18m) ?? 0).ToString("N2"))</strong></td>
+                                    <td><span class="estado-pill @(ped.Estado == EstadoPedido.Completado ? "estado-completado" : "estado-pendiente")">@ped.Estado</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            @if (vistaActual == "Perfil")
+            {
+                <div class="profile-panel glass-panel">
+                    <h3>Datos Personales</h3>
+                    <hr class="divider" />
+                    
+                    @if(clienteActual != null)
+                    {
+                        <div class="form-grid">
+                            <div class="input-box">
+                                <label>Nombre Completo</label>
+                                <input type="text" @bind="clienteActual.NombreCompleto" class="form-control" />
+                            </div>
+                            <div class="input-box">
+                                <label>Cédula / RNC</label>
+                                <input type="text" @bind="clienteActual.CedulaRNC" class="form-control" />
+                            </div>
+                            <div class="input-box">
+                                <label>Teléfono</label>
+                                <input type="text" @bind="clienteActual.Telefono" class="form-control" />
+                            </div>
+                            <div class="input-box full-width">
+                                <label>Dirección de Entrega Predeterminada</label>
+                                <textarea @bind="clienteActual.DireccionEntrega" class="form-control"></textarea>
+                            </div>
+                        </div>
+                        <button class="save-profile-btn" @onclick="GuardarPerfil">💾 Guardar Cambios</button>
+                    }
+                </div>
+            }
+        </div>
+    </main>
+</div>
+
+@code {
+    private string vistaActual = "Tienda";
+    private string nombreCliente = "Cargando...";
+    private string correoUsuario = "";
+    
+    private Cliente? clienteActual;
+    private List<Producto>? productosCatalogo;
+    private List<Producto>? todosLosProductos;
+    private List<Pedido> misPedidos = new();
+    private string textoBusqueda = "";
+
+    public class ItemCarrito {
+        public required Producto Producto { get; set; }
+        public int Cantidad { get; set; } = 1;
+        public decimal Subtotal => Producto.Precio * Cantidad;
+    }
+    private List<ItemCarrito> carrito = new();
+    private decimal Subtotal => carrito.Sum(i => i.Subtotal);
+    private decimal Itbis => Subtotal * 0.18m;
+    private decimal Total => Subtotal + Itbis;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            nombreCliente = user.Identity.Name ?? "Cliente";
+            correoUsuario = user.FindFirst(c => c.Type == ClaimTypes.Email)?.Value ?? "";
+
+            if(!string.IsNullOrEmpty(correoUsuario)) {
+                clienteActual = await _context.Clientes.FirstOrDefaultAsync(c => c.CorreoElectronico == correoUsuario);
+            }
+        }
+
+        todosLosProductos = await _context.Productos.Where(x => x.Activo).ToListAsync();
+        productosCatalogo = todosLosProductos.ToList();
+
+        if (clienteActual != null)
+        {
+            misPedidos = await _context.Pedidos
+                .Include(p => p.Articulos)
+                .Where(p => p.ClienteId == clienteActual.Id)
+                .OrderByDescending(p => p.Id)
+                .ToListAsync();
+        }
+    }
+
+    private void CambiarVista(string nuevaVista) => vistaActual = nuevaVista;
+
+    private void FiltrarProductos()
+    {
+        if (string.IsNullOrWhiteSpace(textoBusqueda))
+            productosCatalogo = todosLosProductos;
+        else
+            productosCatalogo = todosLosProductos?.Where(p => p.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+    private void AgregarAlCarrito(Producto p)
+    {
+        var existe = carrito.FirstOrDefault(x => x.Producto.Id == p.Id);
+        if (existe != null) existe.Cantidad++;
+        else carrito.Add(new ItemCarrito { Producto = p, Cantidad = 1 });
+    }
+
+    private void SumarCantidad(ItemCarrito item) => item.Cantidad++;
+    private void RestarCantidad(ItemCarrito item) {
+        if (item.Cantidad > 1) item.Cantidad--;
+        else carrito.Remove(item);
+    }
+
+    private async Task ProcesarPedido()
+    {
+        if (clienteActual == null || !carrito.Any()) return;
+
+        var nuevoPedido = new Pedido
+        {
+            FechaCreacion = DateTime.Now,
+            ClienteId = clienteActual.Id,
+            Estado = EstadoPedido.Pendiente,
+            TipoDocumento = "Cotizacion",
+            RequiereDelivery = true,
+            Articulos = carrito.Select(i => new DetallePedido
+            {
+                ProductoId = i.Producto.Id,
+                Cantidad = i.Cantidad,
+                PrecioUnitario = i.Producto.Precio
+            }).ToList()
+        };
+
+        _context.Pedidos.Add(nuevoPedido);
+        await _context.SaveChangesAsync();
+
+        carrito.Clear();
+        await OnInitializedAsync();
+        CambiarVista("Pedidos");
+    }
+
+    private async Task GuardarPerfil()
+    {
+        if(clienteActual != null)
+        {
+            _context.Clientes.Update(clienteActual);
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    private void CerrarSesion() => Navigation.NavigateTo("/login", forceLoad: true);
+}
+
+<style>
+    /* Estilos integrados de FerreApp */
+    .business-layout { display: flex; height: 100vh; overflow: hidden; background: #f4f6fb; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; }
+    .sidebar { width: 240px; background: #0f172a; color: white; padding: 20px; display: flex; flex-direction: column; flex-shrink: 0; }
+    .logo-section { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
+    .logo-icon { width: 45px; height: 45px; border-radius: 12px; background: #eab308; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #0f172a;}
+    .logo-section h1 { margin: 0; font-size: 18px; font-weight: 700; }
+    .logo-section span { color: #eab308; font-size: 12px; }
+    .sidebar-menu { display: flex; flex-direction: column; gap: 5px; }
+    .menu-item { background: transparent; border: none; color: #cbd5e1; text-align: left; padding: 14px 16px; border-radius: 10px; cursor: pointer; font-weight: 500; font-size: 14px; transition: 0.2s; }
+    .menu-item:hover { background: rgba(255,255,255,.05); color: white; }
+    .menu-item.active { background: #eab308; color: #0f172a; font-weight: 600; }
+    .main-content { flex: 1; display: flex; flex-direction: column; padding: 20px 30px; overflow-y: auto; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .topbar h2 { margin: 0; font-size: 26px; font-weight: 800; color: #1e293b; }
+    .topbar p { color: #64748b; font-size: 14px; margin-top: 4px; }
+    .user-box { background: white; padding: 10px 16px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 36px; height: 36px; font-size: 18px; border-radius: 10px; background:#eab308; display:flex; align-items:center; justify-content:center;}
+    .content-wrapper { display: flex; gap: 20px; flex: 1; }
+    .content-wrapper.has-cart { grid-template-columns: 1fr 340px; display: grid; }
+    .glass-panel { background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03); }
+    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px; }
+    .product-card { background: white; border-radius: 16px; padding: 15px; border: 1px solid #e2e8f0; transition: 0.2s; display:flex; flex-direction:column;}
+    .product-card:hover { border-color: #cbd5e1; transform: translateY(-3px);}
+    .product-image-container { height: 140px; border-radius: 10px; background: #f8fafc; margin-bottom: 15px; padding: 10px; }
+    .product-image-container img { width: 100%; height: 100%; object-fit: contain; }
+    .price { color: #0f172a; font-size: 18px; font-weight: 800; margin: 0 0 12px 0; }
+    .add-btn-sm { background: #eab308; color: #0f172a; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .cart-section { position: sticky; top: 0; height: calc(100vh - 120px); display: flex; flex-direction: column; }
+    .cart-count { background: #0f172a; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;}
+    .grand-total h2 { color: #16a34a; font-size: 26px; margin: 0; }
+    .checkout-btn { width: 100%; background: #0f172a; color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 700; font-size: 16px; margin-top: 20px; cursor: pointer; }
+    .modern-table { width: 100%; border-collapse: collapse; }
+    .modern-table th { background: #f8fafc; color: #475569; font-weight: 600; font-size: 12px; text-transform: uppercase; padding: 16px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    .modern-table td { padding: 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; }
+    .estado-pill { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .estado-pendiente { background: #fef3c7; color: #b45309; }
+    .estado-completado { background: #dcfce7; color: #166534; }
+    .form-control { width: 100%; padding: 12px 15px; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; font-size: 14px; outline: none; }
+</style>
