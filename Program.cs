@@ -1,9 +1,7 @@
 using FerreAppLaVarilla.UI.Components;
 using FerreAppLaVarilla.UI.Data;
-
-// ⬇️ Estos son tus namespaces correctos
 using FerreAppLaVarilla.UI.Services;
-using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies; // Añadido para la autenticación
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,15 +14,22 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 // ====================================================================
-// 1.1 AUTENTICACIÓN
+// 1.1 AUTENTICACIÓN Y AUTORIZACIÓN (¡LA SOLUCIÓN AL ERROR!)
 // ====================================================================
+// A. Registramos los servicios nativos que el servidor te estaba pidiendo
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/login"; // Ajusta esto si tu ruta es diferente
+    });
 
-// 1. Registramos la clase concreta
-builder.Services.AddScoped<FerreAppLaVarilla.UI.Services.AutenticacionService>();
+builder.Services.AddAuthorization();
+builder.Services.AddCascadingAuthenticationState(); // Vital para que los componentes <AuthorizeView> funcionen bien
 
-// 2. Le decimos a Blazor que use esa misma clase para la seguridad del sistema
+// B. Registramos tus servicios personalizados (Eliminé los duplicados)
+builder.Services.AddScoped<AutenticacionService>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
-    sp.GetRequiredService<FerreAppLaVarilla.UI.Services.AutenticacionService>());
+    sp.GetRequiredService<AutenticacionService>());
 
 // ====================================================================
 // 2. CONEXIÓN A SQL SERVER
@@ -33,16 +38,15 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=FerreAppLaVarilla;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;"));
 
 // ====================================================================
-// 3. SERVICIOS DEL CARRITO Y AUTENTICACIÓN
+// 3. TUS SERVICIOS DEL NEGOCIO
 // ====================================================================
 builder.Services.AddScoped<CarritoService>();
-builder.Services.AddScoped<AutenticacionService>();
-builder.Services.AddScoped<FerreAppLaVarilla.UI.Services.ProductoService>();
-builder.Services.AddScoped<FerreAppLaVarilla.UI.Services.UsuarioService>();
+builder.Services.AddScoped<ProductoService>();
+builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<DashboardService>();
-builder.Services.AddScoped<FerreAppLaVarilla.UI.Models.ServicioDespacho>();
-builder.Services.AddScoped<FerreAppLaVarilla.UI.Services.CarritoService>();
+builder.Services.AddScoped<FerreAppLaVarilla.UI.Models.ServicioDespacho>(); // Nota: Generalmente no se inyectan "Models", pero lo dejo intacto si tu lógica lo requiere.
 builder.Services.AddScoped<PdfService>();
+builder.Services.AddSingleton<PedidoNotificationService>();
 
 var app = builder.Build();
 
@@ -59,6 +63,10 @@ app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages:
 app.UseHttpsRedirection();
 app.UseAntiforgery();
 app.MapStaticAssets();
+
+// ¡ESTO ES CRÍTICO! El orden debe ser exactamente este:
+app.UseAuthentication(); // 1. Verifica la identidad del usuario
+app.UseAuthorization();  // 2. Verifica los permisos del usuario
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

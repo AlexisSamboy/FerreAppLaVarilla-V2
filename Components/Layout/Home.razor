@@ -149,7 +149,7 @@
 
             <div class="offer-card">
 
-                <img src="images/oferta-padres.png" />
+                <img src="images/descuento dia del padre.png" />
 
                 <div class="offer-content">
 
@@ -176,7 +176,7 @@
 
             <div class="offer-card">
 
-                <img src="images/concurso-ferreteria.png" />
+                <img src="images/rifa dia del padre.png" />
 
                 <div class="offer-content">
 
@@ -203,7 +203,7 @@
 
             <div class="offer-card">
 
-                <img src="images/materiales.jpg" />
+                <img src="images/materiales contruccion.jpg" />
 
                 <div class="offer-content">
 
@@ -356,7 +356,140 @@
         </div>
 
     </section>
+    <footer class="modern-footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <div class="logo-text footer-logo">
+                    <h2>FerreApp<span>LaVarilla</span></h2>
+                </div>
+                <p>Tu aliado estratégico en construcción y ferretería. Brindamos soluciones inteligentes para cada uno de tus proyectos.</p>
+            </div>
 
+            <div class="footer-links">
+                <h3>Enlaces Rápidos</h3>
+                <ul>
+                    <li><a href="/">Inicio</a></li>
+                    <li><a href="/productos">Catálogo de Productos</a></li>
+                    <li><a href="#">Ofertas de Temporada</a></li>
+                    <li><a href="#">Sobre Nosotros</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-contact">
+                <h3>Visítanos</h3>
+                <ul class="contact-info">
+                    <li>📍 <strong>Dirección:</strong> Profeta Elias, Baní 94000</li>
+                    <li>📞 <strong>Teléfono:</strong> +1 (809) 000-0000</li>
+                    <li>✉️ <strong>Email:</strong> contacto@ferreapplavarilla.com</li>
+                    <li>🕒 <strong>Horario:</strong> Lun - Sáb: 8:00 AM - 6:00 PM</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; @DateTime.Now.Year FerreApp La Varilla. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <style>
+            /* VARIABLES (Si ya las tienes en tu CSS global, puedes omitir este bloque :root) */
+            :root {
+                --secondary-color: #ea580c; /* Naranja ferretero */
+                --transition: all 0.3s ease;
+            }
+
+            /* FOOTER ESTILOS */
+            .modern-footer {
+                background: #0f172a;
+                color: #f8fafc;
+                padding: 4rem 2rem 1rem 2rem;
+                margin-top: 4rem;
+                font-family: 'Segoe UI', system-ui, sans-serif;
+            }
+    
+            .footer-container {
+                max-width: 1200px;
+                margin: 0 auto;
+                display: grid;
+                grid-template-columns: 2fr 1fr 1fr;
+                gap: 4rem;
+                margin-bottom: 3rem;
+            }
+    
+            .footer-logo h2 {
+                color: white;
+                margin: 0;
+                font-size: 1.5rem;
+                font-weight: 800;
+            }
+    
+            .footer-logo span {
+                color: var(--secondary-color);
+            }
+    
+            .footer-brand p {
+                color: #94a3b8;
+                line-height: 1.6;
+                margin-top: 1rem;
+                max-width: 400px;
+            }
+    
+            .footer-links h3, .footer-contact h3 {
+                color: white;
+                margin-bottom: 1.5rem;
+                font-size: 1.2rem;
+            }
+    
+            .footer-links ul, .footer-contact ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+    
+            .footer-links li {
+                margin-bottom: 0.8rem;
+            }
+    
+            .footer-links a {
+                color: #94a3b8;
+                text-decoration: none;
+                transition: var(--transition);
+            }
+    
+                .footer-links a:hover {
+                    color: var(--secondary-color);
+                    padding-left: 5px;
+                }
+    
+            .contact-info li {
+                color: #94a3b8;
+                margin-bottom: 1rem;
+                display: flex;
+                gap: 10px;
+            }
+    
+            .contact-info strong {
+                color: white;
+            }
+    
+            .footer-bottom {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding-top: 2rem;
+                border-top: 1px solid rgba(255,255,255,0.1);
+                text-align: center;
+                color: #64748b;
+                font-size: 0.9rem;
+            }
+
+            /* RESPONSIVE FOOTER */
+            @@media (max-width: 768px) {
+                .footer-container {
+                    grid-template-columns: 1fr;
+                    gap: 2rem;
+                }
+            }
+    </style>
 </div>
 
 @code {

@@ -1,0 +1,83 @@
+﻿@implements IDisposable
+@using Microsoft.AspNetCore.Components.Authorization
+@inject FerreAppLaVarilla.UI.Services.PedidoNotificationService NotificadorPedidos
+@inject AuthenticationStateProvider AuthStateProvider
+
+@if (mostrarAlerta && esPersonalFerreteria)
+{
+    <div class="toast-notification fade-in">
+        <div class="toast-icon">🔔</div>
+        <div class="toast-content">
+            <h4>¡Nuevo Pedido!</h4>
+            <p>@mensajeAlerta</p>
+        </div>
+        <button class="toast-close" @onclick="CerrarAlerta">✖</button>
+    </div>
+}
+
+@code {
+    private bool mostrarAlerta = false;
+    private string mensajeAlerta = "";
+    private bool esPersonalFerreteria = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        
+        // Verificamos si el usuario actual es Admin o Cajero
+        esPersonalFerreteria = user.IsInRole("Admin") || user.IsInRole("Cajero");
+
+        if (esPersonalFerreteria)
+        {
+            // Nos suscribimos para escuchar la campana
+            NotificadorPedidos.OnNuevoPedido += MostrarNotificacion;
+        }
+    }
+
+    private void MostrarNotificacion(string mensaje)
+    {
+        mensajeAlerta = mensaje;
+        mostrarAlerta = true;
+        
+        // InvokeAsync es obligatorio porque el aviso viene de OTRO usuario
+        InvokeAsync(StateHasChanged);
+
+        // Ocultar automáticamente después de 6 segundos
+        Task.Delay(6000).ContinueWith(_ => 
+        {
+            mostrarAlerta = false;
+            InvokeAsync(StateHasChanged);
+        });
+    }
+
+    private void CerrarAlerta() => mostrarAlerta = false;
+
+    // Es vital desconectarse al salir para no consumir memoria
+    public void Dispose()
+    {
+        NotificadorPedidos.OnNuevoPedido -= MostrarNotificacion;
+    }
+}
+
+<style>
+    .toast-notification {
+        position: fixed; bottom: 30px; right: 30px;
+        background: #0b1527; color: white;
+        padding: 16px 20px; border-radius: 12px;
+        display: flex; align-items: center; gap: 15px;
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        z-index: 10000; border-left: 5px solid #f4b400;
+        min-width: 300px;
+    }
+    .toast-icon { font-size: 24px; animation: ring 1s ease-in-out infinite; }
+    .toast-content h4 { margin: 0 0 5px 0; font-size: 16px; color: #f4b400; font-weight: 700; }
+    .toast-content p { margin: 0; font-size: 14px; color: #cbd5e1; }
+    .toast-close { background: transparent; border: none; color: #94a3b8; font-size: 16px; cursor: pointer; margin-left: auto; }
+    .toast-close:hover { color: white; }
+    
+    .fade-in { animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    
+    @@keyframes slideUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+    @@keyframes ring { 0% { transform: rotate(0); } 15% { transform: rotate(15deg); } 30% { transform: rotate(-15deg); } 45% { transform: rotate(10deg); } 60% { transform: rotate(-10deg); } 75% { transform: rotate(5deg); } 85% { transform: rotate(-5deg); } 100% { transform: rotate(0); } }
+</style>

@@ -5,6 +5,7 @@
     <File Path="DashboardService.cs" />
     <File Path="Models/ServicioDespacho.cs" />
     <File Path="PdfService.cs" />
+    <File Path="PedidoNotificationService.cs" />
     <File Path="ProductoService.cs" />
     <File Path="UsuarioService.cs" />
   </Folder>
