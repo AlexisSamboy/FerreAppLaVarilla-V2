@@ -1,4 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FerreAppLaVarilla.UI.Models
 {
@@ -13,20 +16,30 @@ namespace FerreAppLaVarilla.UI.Models
 
     public class Pedido
     {
+        [Key]
         public int Id { get; set; }
 
-        public DateTime FechaCreacion { get; set; }
+        [Required]
+        public DateTime FechaCreacion { get; set; } = DateTime.Now;
 
-        public EstadoPedido Estado { get; set; }
+        [Required]
+        public EstadoPedido Estado { get; set; } = EstadoPedido.Pendiente;
+
+        // =========================
+        // MONTO TOTAL (PARA REPORTES)
+        // =========================
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal Total { get; set; }
 
         // =========================
         // CLIENTE
         // =========================
+        [Required]
         public int ClienteId { get; set; }
         public Cliente? Cliente { get; set; }
 
         // =========================
-        // CAMIÓN
+        // CAMIÓN / LOGÍSTICA
         // =========================
         public int? CamionAsignadoId { get; set; }
         public Camion? CamionAsignado { get; set; }
@@ -36,7 +49,7 @@ namespace FerreAppLaVarilla.UI.Models
         public string TipoDocumento { get; set; } = "Factura";
 
         // =========================
-        // DETALLES
+        // DETALLES DEL PEDIDO
         // =========================
         public List<DetallePedido> Articulos { get; set; } = new();
     }

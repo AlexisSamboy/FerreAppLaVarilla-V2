@@ -1,0 +1,338 @@
+﻿@page "/admin/reportes"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using FerreAppLaVarilla.UI.Models
+@using FerreAppLaVarilla.UI.Services
+@attribute [Authorize(Roles = "Admin")]
+
+@* Librería de Gráficos *@
+@using ApexCharts
+@inject NavigationManager _navigation
+@inject AutenticacionService _authService
+@inject DashboardService _dashboardService
+@inject IJSRuntime JS
+
+<PageTitle>Panel de Reportes Avanzados - FerreApp La Varilla</PageTitle>
+
+@* MODAL DE EXPORTACIÓN *@
+@if (mostrarModalExportar)
+{
+    <div class="modal-overlay fade-in">
+        <div class="export-modal bounce-in">
+            <div class="modal-header-flex">
+                <h3>Exportar Datos de FerreApp</h3>
+                <button class="btn-close-minimal" @onclick="CerrarModalExportar">✕</button>
+            </div>
+            <p class="modal-subtitle">Selecciona los parámetros para descargar tu reporte.</p>
+            
+            <div class="modal-content">
+                <div class="form-group-admin">
+                    <label>Rango de Fecha</label>
+                    <select @bind="filtroExportarRango" class="admin-input">
+                        <option value="hoy">Hoy</option>
+                        <option value="semana">Esta semana</option>
+                        <option value="mes">Este mes</option>
+                        <option value="personalizado">Rango Personalizado</option>
+                    </select>
+                </div>
+
+                <div class="form-group-admin">
+                    <label>Formato de archivo</label>
+                    <div class="radio-group-admin">
+                        <label><input type="radio" name="formato" checked /> Excel (.xlsx)</label>
+                        <label><input type="radio" name="formato" /> CSV (.csv)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer-flex">
+                <button class="btn-action outline" @onclick="CerrarModalExportar">Cancelar</button>
+                <button class="btn-action primary" disabled="@estaExportando" @onclick="SimularExportacion">
+                    @(estaExportando ? "⏳ Procesando..." : "✅ Exportar Ahora")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="admin-container">
+    <aside class="admin-sidebar">
+        <div class="sidebar-header">
+            <div class="logo-icon">⚡</div>
+            <div class="logo-text">
+                <h2>FerreApp</h2>
+                <span>La Varilla</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/panel-admin" class="nav-link"><span>🏠</span> Inicio</a>
+            <a href="/admin/pedidos" class="nav-link"><span>🛒</span> Pedidos</a>
+            <a href="/admin/gestionar-productos" class="nav-link"><span>📦</span> Productos</a>
+            <a href="/admin/clientes" class="nav-link"><span>👤</span> Clientes</a>
+            <a href="/admin/reportes" class="nav-link active"><span>📊</span> Reportes</a>
+            <a href="/admin/configuracion" class="nav-link"><span>⚙️</span> Configuración</a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="admin-pill">
+                <div class="avatar">AD</div>
+                <div class="admin-info">
+                    <strong>Administrador</strong>
+                    <small>admin@ferreapp.com</small>
+                </div>
+            </div>
+            <button class="btn-logout-minimal" @onclick="CerrarSesion">Cerrar Sesión</button>
+        </div>
+    </aside>
+
+    <main class="admin-main">
+        <header class="admin-topbar">
+            <div class="welcome-text">
+                <h1>Panel de Reportes 👋</h1>
+                <p>Análisis dinámico de FerreApp La Varilla</p>
+            </div>
+            <div class="topbar-actions">
+                <button class="btn-action outline" @onclick="AbrirModalExportar">📄 Imprimir reporte</button>
+                <div class="date-display">📅 @DateTime.Now.ToString("dddd, dd MMM")</div>
+            </div>
+        </header>
+
+        @if (stats == null)
+        {
+            <div class="loader-container">
+                <div class="custom-spinner"></div>
+                <p>Consultando base de datos...</p>
+            </div>
+        }
+        else
+        {
+            <section class="stats-cards-grid">
+                <div class="card-stat">
+                    <div class="card-body">
+                        <small>Ventas Hoy</small>
+                        <h2>RD$ @stats.VentasHoy.ToString("N2")</h2>
+                    </div>
+                    <div class="card-icon blue">🛒</div>
+                </div>
+                <div class="card-stat">
+                    <div class="card-body">
+                        <small>Pedidos Pendientes</small>
+                        <h2>@stats.PedidosPendientes</h2>
+                    </div>
+                    <div class="card-icon green">📋</div>
+                </div>
+                <div class="card-stat">
+                    <div class="card-body">
+                        <small>Productos en Stock</small>
+                        <h2>@stats.StockTotal</h2>
+                    </div>
+                    <div class="card-icon orange">📦</div>
+                </div>
+                <div class="card-stat">
+                    <div class="card-body">
+                        <small>Clientes</small>
+                        <h2>@stats.ClientesRegistrados</h2>
+                    </div>
+                    <div class="card-icon purple">👥</div>
+                </div>
+            </section>
+
+            <div class="dashboard-lower-grid">
+                
+                <div class="data-card chart-card">
+                    <div class="card-header-flex">
+                        <h3>Tendencia de Ventas (@filtroRangoHistorico días)</h3>
+                        <select class="minimal-select" @onchange="ActualizarRangoVentas">
+                            <option value="7">7 días</option>
+                            <option value="30">30 días</option>
+                            <option value="90">3 meses</option>
+                        </select>
+                    </div>
+                    
+                    <ApexChart TItem="VentaPorDia"
+                               Options="lineChartOptions"
+                               Height="300"
+                               @ref="lineChartRef">
+                        <ApexPointSeries TItem="VentaPorDia"
+                                         Items="stats.HistoricoVentas"
+                                         SeriesType="SeriesType.Line"
+                                         XValue="@(e => e.FechaLabel)"
+                                         YValue="@(e => (decimal)e.Monto)"
+                                         Name="Ventas RD$"
+                                         Color="#3b82f6" />
+                    </ApexChart>
+                </div>
+
+                <div class="data-card chart-card">
+                    <h3>Ventas por Categoría</h3>
+                    <ApexChart TItem="VentaPorCategoria"
+                               Options="donutChartOptions"
+                               Height="300">
+                        <ApexPointSeries TItem="VentaPorCategoria"
+                                         Items="stats.VentasPorCategoria"
+                                         SeriesType="SeriesType.Donut"
+                                         XValue="@(e => e.Categoria)"
+                                         YValue="@(e => (decimal)e.Porcentaje)"
+                                         Name="Ventas (%)" />
+                    </ApexChart>
+                </div>
+
+                <div class="data-card chart-card horizontal-bars-card">
+                    <h3>Top 10 Productos más vendidos</h3>
+                    <ApexChart TItem="ProductoMasVendido"
+                               Options="barChartOptions"
+                               Height="400">
+                        <ApexPointSeries TItem="ProductoMasVendido"
+                                         Items="stats.Top10Productos"
+                                         SeriesType="SeriesType.Bar"
+                                         XValue="@(e => e.Nombre)"
+                                         YValue="@(e => (decimal)e.Cantidad)"
+                                         Name="Unidades"
+                                         Color="#f4b400" />
+                    </ApexChart>
+                </div>
+            </div>
+        }
+    </main>
+</div>
+
+@code {
+    private DashboardStats? stats;
+    private ApexChart<VentaPorDia>? lineChartRef;
+    private int filtroRangoHistorico = 7;
+    
+    private bool mostrarModalExportar = false;
+    private bool estaExportando = false;
+    private string filtroExportarRango = "hoy";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatosDinamicos(filtroRangoHistorico);
+    }
+
+    private async Task CargarDatosDinamicos(int dias)
+    {
+        stats = await _dashboardService.ObtenerEstadisticasAsync(dias);
+    }
+
+    private async Task ActualizarRangoVentas(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int nuevoRango))
+        {
+            filtroRangoHistorico = nuevoRango;
+            await CargarDatosDinamicos(filtroRangoHistorico);
+            if (lineChartRef != null) await lineChartRef.UpdateSeriesAsync(true);
+        }
+    }
+
+    private ApexChartOptions<VentaPorDia> lineChartOptions = new ApexChartOptions<VentaPorDia> {
+        Chart = new Chart { Toolbar = new Toolbar { Show = false } },
+        Stroke = new Stroke { Curve = Curve.Smooth, Width = 3 },
+        Grid = new Grid { BorderColor = "#f1f5f9" }
+    };
+
+    private ApexChartOptions<VentaPorCategoria> donutChartOptions = new ApexChartOptions<VentaPorCategoria> {
+        Chart = new Chart { Toolbar = new Toolbar { Show = false } },
+        Legend = new Legend { Position = LegendPosition.Bottom },
+        Colors = new List<string> { "#3b82f6", "#10b981", "#f4b400", "#a855f7" }
+    };
+
+    private ApexChartOptions<ProductoMasVendido> barChartOptions = new ApexChartOptions<ProductoMasVendido> {
+        Chart = new Chart { Toolbar = new Toolbar { Show = false } },
+        PlotOptions = new PlotOptions { Bar = new PlotOptionsBar { Horizontal = true } },
+        Yaxis = new List<YAxis> { new YAxis { Labels = new YAxisLabels { Show = true } } }
+    };
+
+    private void AbrirModalExportar() => mostrarModalExportar = true;
+    private void CerrarModalExportar() => mostrarModalExportar = false;
+
+    // --- LÓGICA REAL DE EXPORTACIÓN (CSV) ---
+    private async Task SimularExportacion()
+    {
+        estaExportando = true;
+        StateHasChanged();
+
+        try
+        {
+            // 1. Construir el contenido del CSV
+            var sb = new System.Text.StringBuilder();
+            
+            // Encabezados
+            sb.AppendLine("ID_Pedido,Cliente,Estado,Total_RD$");
+
+            // Llenar con los datos reales que tenemos en 'stats.UltimosPedidos'
+            if (stats != null && stats.UltimosPedidos.Any())
+            {
+                foreach (var pedido in stats.UltimosPedidos)
+                {
+                    // Limpiamos comas para que no rompan el CSV
+                    var clienteLimpio = pedido.Cliente?.Replace(",", " ") ?? "N/A";
+                    sb.AppendLine($"{pedido.Id},{clienteLimpio},{pedido.Estado},{pedido.Total}");
+                }
+            }
+            else
+            {
+                sb.AppendLine("No hay datos disponibles para este rango.");
+            }
+
+            // 2. Convertir a Base64 para enviarlo al navegador
+            var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+            var base64 = Convert.ToBase64String(bytes);
+
+            // 3. Llamar a JavaScript para descargar el archivo
+            string nombreArchivo = $"Reporte_FerreApp_{DateTime.Now:yyyyMMdd}.csv";
+            await JS.InvokeVoidAsync("descargarArchivo", nombreArchivo, base64);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al exportar: {ex.Message}");
+        }
+        finally
+        {
+            estaExportando = false;
+            mostrarModalExportar = false;
+            StateHasChanged();
+        }
+    }
+
+    private void CerrarSesion()
+    {
+        _authService.CerrarSesion();
+        _navigation.NavigateTo("/", true);
+    }
+}
+
+<style>
+    @((MarkupString)FerreAppLaVarilla.UI.Services.AdminTheme.EstilosGlobales)
+
+    .minimal-select { border: 1px solid #e2e8f0; border-radius: 8px; padding: 5px; font-size: 13px; cursor: pointer; }
+    .chart-card { min-height: 400px; display: flex; flex-direction: column; gap: 20px; }
+    .horizontal-bars-card { grid-column: 1 / -1; }
+    
+    /* --- CSS CORREGIDO DEL MODAL --- */
+    .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(11,21,39,0.7); display:flex; align-items:center; justify-content:center; z-index:2000; backdrop-filter: blur(4px); }
+    .export-modal { background: white; padding: 30px; border-radius: 20px; width: 100%; max-width: 450px; box-shadow: 0 25px 50px rgba(0,0,0,0.25); border: 1px solid #e2e8f0; }
+    
+    .modal-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .modal-header-flex h3 { margin: 0; font-size: 20px; font-weight: 800; color: #0b1527; }
+    .btn-close-minimal { background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8; }
+    .btn-close-minimal:hover { color: #ef4444; }
+    
+    .modal-subtitle { color: #64748b; font-size: 13px; margin-bottom: 25px; }
+    .modal-content { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
+    
+    .form-group-admin label { font-size: 13px; font-weight: 700; color: #1e293b; display: block; margin-bottom: 8px; }
+    .admin-input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; }
+    
+    .radio-group-admin { display: flex; flex-direction: column; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
+    .radio-group-admin label { font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; margin: 0; cursor: pointer; }
+    
+    /* El secreto para que los botones no se apilen feo */
+    .modal-footer-flex { display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+    .modal-footer-flex button { padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: 14px; }
+    .modal-footer-flex .btn-action.outline { background: white; border: 1px solid #cbd5e1; color: #475569; }
+    .modal-footer-flex .btn-action.primary { background: #0b1527; color: white; }
+    .modal-footer-flex .btn-action.primary:hover { background: #f4b400; color: #0b1527; }
+    .modal-footer-flex .btn-action:disabled { opacity: 0.7; cursor: not-allowed; }
+</style>

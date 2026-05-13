@@ -8,6 +8,7 @@
 @inject ApplicationDbContext DbContext
 @inject AutenticacionService AuthService
 @inject NavigationManager Navigation
+@inject FerreAppLaVarilla.UI.Services.CarritoService CarritoService
 
 <PageTitle>Login - FerreApp La Varilla</PageTitle>
 
@@ -160,7 +161,15 @@
             }
             else if (usuario.Rol == "Cliente")
             {
-                Navigation.NavigateTo("/mi-tienda");
+                // Redirección inteligente basada en el contenido del carrito
+                if (CarritoService.ObtenerItems().Any())
+                {
+                    Navigation.NavigateTo("/checkout");
+                }
+                else
+                {
+                    Navigation.NavigateTo("/mi-tienda");
+                }
             }
             else
             {
@@ -283,7 +292,6 @@
     }
     .alert.error { background: #fef2f2; color: #dc2626; padding: 12px; border-radius: 10px; margin-bottom: 20px; font-size: 14px; border: 1px solid #fecaca; text-align:center; }
 
-    /* BOTÓN VOLVER AL INICIO */
     .btn-back-home {
         position: absolute;
         top: 30px;

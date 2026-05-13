@@ -4,6 +4,7 @@ using FerreAppLaVarilla.UI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FerreAppLaVarilla.UI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260513010412_AgregarCampoTotalAPedidos")]
+    partial class AgregarCampoTotalAPedidos
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -236,7 +239,7 @@ namespace FerreAppLaVarilla.UI.Migrations
 
             modelBuilder.Entity("FerreAppLaVarilla.UI.Models.DetallePedido", b =>
                 {
-                    b.HasOne("FerreAppLaVarilla.UI.Models.Pedido", "Pedido")
+                    b.HasOne("FerreAppLaVarilla.UI.Models.Pedido", null)
                         .WithMany("Articulos")
                         .HasForeignKey("PedidoId");
 
@@ -245,8 +248,6 @@ namespace FerreAppLaVarilla.UI.Migrations
                         .HasForeignKey("ProductoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Pedido");
 
                     b.Navigation("Producto");
                 });

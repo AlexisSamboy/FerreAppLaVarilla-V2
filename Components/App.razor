@@ -16,6 +16,17 @@
     <link rel="stylesheet" href="css/productos.css" />
     <ImportMap />
     <link rel="icon" type="image/png" href="favicon.png" />
+    <script src="_content/Blazor-ApexCharts/js/apex-charts.js"></script>
+    <script>
+        window.descargarArchivo = function (nombreArchivo, contenidoBase64) {
+        const link = document.createElement('a');
+        link.download = nombreArchivo;
+        link.href = "data:text/csv;base64," + contenidoBase64;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        }
+    </script>
     
     <HeadOutlet @rendermode="InteractiveServer" />
 </head>

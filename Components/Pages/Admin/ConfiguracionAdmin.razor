@@ -1,0 +1,70 @@
+﻿@page "/admin/configuracion"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin")]
+
+<div class="admin-container">
+    <aside class="admin-sidebar">
+        <div class="sidebar-header">
+            <div class="logo-icon">⚡</div>
+            <div class="logo-text"><h2>FerreApp</h2><span>La Varilla</span></div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/panel-admin" class="nav-link"><span>🏠</span> Inicio</a>
+            <a href="/admin/pedidos" class="nav-link"><span>🛒</span> Pedidos</a>
+            <a href="/admin/gestionar-productos" class="nav-link"><span>📦</span> Productos</a>
+            <a href="/admin/clientes" class="nav-link"><span>👤</span> Clientes</a>
+            <a href="/admin/configuracion" class="nav-link active"><span>⚙️</span> Configuración</a>
+        </nav>
+    </aside>
+
+    <main class="admin-main">
+        <header class="admin-topbar">
+            <div class="welcome-text">
+                <h1>Configuración del Sistema ⚙️</h1>
+                <p>Ajusta los parámetros generales de FerreApp La Varilla.</p>
+            </div>
+        </header>
+
+        <div class="settings-grid">
+            <div class="data-card">
+                <h3>Información del Negocio</h3>
+                <div class="form-group-admin">
+                    <label>Nombre de la Ferretería</label>
+                    <input type="text" value="FerreApp La Varilla" class="admin-input" />
+                </div>
+                <div class="form-group-admin">
+                    <label>Dirección Física</label>
+                    <input type="text" value="Baní, Peravia, R.D." class="admin-input" />
+                </div>
+                <button class="btn-action primary" style="width: fit-content; margin-top: 15px;">Guardar Cambios</button>
+            </div>
+
+            <div class="data-card">
+                <h3>Impuestos y Moneda</h3>
+                <div class="form-group-admin">
+                    <label>ITBIS (%)</label>
+                    <input type="number" value="18" class="admin-input" />
+                </div>
+                <div class="form-group-admin">
+                    <label>Moneda Predeterminada</label>
+                    <select class="admin-input">
+                        <option>Pesos Dominicanos (RD$)</option>
+                        <option>Dólares (US$)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<style>
+    @((MarkupString)FerreAppLaVarilla.UI.Services.AdminTheme.EstilosGlobales)
+
+    
+    .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px; }
+    .form-group-admin { margin-bottom: 15px; }
+    .form-group-admin label { display: block; font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 5px; }
+    .admin-input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; outline: none; }
+    .admin-input:focus { border-color: #0b1527; background: white; }
+</style>

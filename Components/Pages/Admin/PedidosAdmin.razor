@@ -1,0 +1,95 @@
+﻿@page "/admin/pedidos"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using FerreAppLaVarilla.UI.Data
+@using FerreAppLaVarilla.UI.Models
+@attribute [Authorize(Roles = "Admin")]
+
+@inject ApplicationDbContext _context
+@inject NavigationManager _navigation
+
+<div class="admin-container">
+    <aside class="admin-sidebar">
+        <div class="sidebar-header">
+            <div class="logo-icon">⚡</div>
+            <div class="logo-text"><h2>FerreApp</h2><span>La Varilla</span></div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/panel-admin" class="nav-link"><span>🏠</span> Inicio</a>
+            <a href="/admin/pedidos" class="nav-link active"><span>🛒</span> Pedidos</a>
+            <a href="/admin/gestionar-productos" class="nav-link"><span>📦</span> Productos</a>
+            <a href="/admin/clientes" class="nav-link"><span>👤</span> Clientes</a>
+            <a href="/admin/configuracion" class="nav-link"><span>⚙️</span> Configuración</a>
+        </nav>
+    </aside>
+
+    <main class="admin-main">
+        <header class="admin-topbar">
+            <div class="welcome-text">
+                <h1>Gestión de Pedidos 🛒</h1>
+                <p>Monitorea y actualiza el estado de las ventas realizadas.</p>
+            </div>
+        </header>
+
+        <div class="data-card">
+            <div class="card-header-flex">
+                <h3>Listado Maestro de Pedidos</h3>
+                <div class="search-box">
+                    <input type="text" placeholder="Buscar por cliente o ID..." />
+                </div>
+            </div>
+
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID Pedido</th>
+                        <th>Fecha</th>
+                        <th>Cliente</th>
+                        <th>Estado</th>
+                        <th>Total</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var pedido in listaPedidos)
+                    {
+                        <tr>
+                            <td><strong>#@pedido.Id.ToString().PadLeft(5, '0')</strong></td>
+                            <td>@pedido.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</td>
+            
+                            @* CAMBIO 1: Usamos Correo o ID si Nombre no existe en tu clase Cliente/Usuario *@
+                            <td>@(pedido.Cliente != null ? pedido.Cliente.CorreoElectronico : "Consumidor Final")</td>
+            
+                            <td><span class="badge @pedido.Estado.ToString().ToLower()">@pedido.Estado</span></td>
+            
+                            @* CAMBIO 2: Ponemos 0.00 temporalmente si el campo Total no existe en tu tabla Pedido *@
+                            <td>RD$ 0.00</td>
+
+                            <td>
+                                <button class="btn-icon-action" title="Ver detalles">👁️</button>
+                                <button class="btn-icon-action edit" title="Cambiar estado">📝</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+@code {
+    private List<Pedido> listaPedidos = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        listaPedidos = await _context.Pedidos
+            .Include(p => p.Cliente)
+            .OrderByDescending(p => p.FechaCreacion)
+            .ToListAsync();
+    }
+}
+
+<style>
+    @((MarkupString)FerreAppLaVarilla.UI.Services.AdminTheme.EstilosGlobales)
+</style>

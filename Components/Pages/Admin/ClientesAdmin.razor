@@ -1,0 +1,78 @@
+﻿@page "/admin/clientes"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using FerreAppLaVarilla.UI.Data
+@using FerreAppLaVarilla.UI.Models
+@attribute [Authorize(Roles = "Admin")]
+
+@inject ApplicationDbContext _context
+
+<div class="admin-container">
+    <aside class="admin-sidebar">
+        <div class="sidebar-header">
+            <div class="logo-icon">⚡</div>
+            <div class="logo-text"><h2>FerreApp</h2><span>La Varilla</span></div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/panel-admin" class="nav-link"><span>🏠</span> Inicio</a>
+            <a href="/admin/pedidos" class="nav-link"><span>🛒</span> Pedidos</a>
+            <a href="/admin/gestionar-productos" class="nav-link"><span>📦</span> Productos</a>
+            <a href="/admin/clientes" class="nav-link active"><span>👤</span> Clientes</a>
+            <a href="/admin/configuracion" class="nav-link"><span>⚙️</span> Configuración</a>
+        </nav>
+    </aside>
+
+    <main class="admin-main">
+        <header class="admin-topbar">
+            <div class="welcome-text">
+                <h1>Directorio de Clientes 👥</h1>
+                <p>Administra la base de datos de usuarios de tu ferretería.</p>
+            </div>
+        </header>
+
+        <div class="data-card">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Correo</th>
+                        <th>Rol</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var cliente in listaClientes)
+                    {
+                        <tr>
+                            <td><strong>@cliente.Nombre</strong></td>
+                            <td>@cliente.Correo</td>
+                            @* Comentamos Teléfono temporalmente si no existe en tu modelo Usuario *@
+                            @* <td>@cliente.Telefono</td> *@
+                            <td><span class="badge role">@cliente.Rol</span></td>
+                            <td>
+                                <button class="btn-icon-action edit">✏️</button>
+                                <button class="btn-icon-action delete">🗑️</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+@code {
+    private List<Usuario> listaClientes = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        listaClientes = await _context.Usuarios
+            .Where(u => u.Rol == "Cliente")
+            .ToListAsync();
+    }
+}
+
+<style>
+    @((MarkupString)FerreAppLaVarilla.UI.Services.AdminTheme.EstilosGlobales)
+</style>

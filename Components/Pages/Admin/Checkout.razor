@@ -1,86 +1,278 @@
 ﻿@page "/checkout"
 @rendermode InteractiveServer
+
 @using FerreAppLaVarilla.UI.Models
 @using FerreAppLaVarilla.UI.Data
+@using Microsoft.AspNetCore.Components.Authorization
 @inject FerreAppLaVarilla.UI.Services.CarritoService CarritoService
 @inject ApplicationDbContext _context
 @inject NavigationManager Navigation
+@inject FerreAppLaVarilla.UI.Services.AutenticacionService AuthService
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 
-<div class="container" style="max-width: 800px; margin: 40px auto; padding: 20px; background: white; border-radius: 15px; box-shadow: 0 5px 10px #000;">
-    <h2>Finalizar Compra</h2>
-    <hr />
+<PageTitle>Finalizar Compra - FerreApp La Varilla</PageTitle>
 
-    @if (!CarritoService.Items.Any())
-    {
-        <p>Tu carrito está vacío. <a href="/productos">Volver al catálogo</a></p>
-    }
-    else
-    {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Producto</th>
-                    <th>Cant.</th>
-                    <th>Precio</th>
-                    <th>Subtotal</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in CarritoService.Items)
-                {
-                    <tr>
-                        <td>@item.Nombre</td>
-                        <td>@item.Cantidad</td>
-                        <td>RD$ @item.Precio.ToString("N2")</td>
-                        <td>RD$ @item.Subtotal.ToString("N2")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+<div class="premium-checkout-page">
 
-        <div style="text-align: right; font-size: 20px; font-weight: bold; margin-bottom: 30px;">
-            TOTAL A PAGAR: RD$ @CarritoService.ObtenerTotal().ToString("N2")
+    <header class="top-navbar">
+        <div class="nav-brand" @onclick='() => Navigation.NavigateTo("/")' style="cursor: pointer;">
+            <div class="brand-icon">⚡</div>
+            <div class="brand-text">
+                <h1>FerreApp<span>LaVarilla</span></h1>
+                <p>Ferretería Inteligente</p>
+            </div>
         </div>
 
-        <div class="form-group" style="margin-bottom: 20px;">
-            <label>Dirección de Entrega:</label>
-            <textarea @bind="direccionEntrega" class="form-control" rows="3" placeholder="Ej: Calle Duarte #10, Baní..."></textarea>
-        </div>
+        <nav class="nav-links">
+            <a href="/">Inicio</a>
+            <a href="/productos">Productos</a>
+            <a href="#">Ofertas</a>
+            <a href="#">Nosotros</a>
+        </nav>
 
-        <button class="btn-confirmar" @onclick="ConfirmarPedido"
-                style="width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">
-            ✅ Confirmar y Realizar Pedido
-        </button>
-    }
+        <div class="nav-auth">
+            <AuthorizeView>
+                <Authorized>
+                    <div class="user-pill">
+                        <div class="avatar">👤</div>
+                        <div class="user-info">
+                            <strong>@context.User.Identity?.Name</strong>
+                            <small>Sesión activa</small>
+                        </div>
+                    </div>
+                    <button class="btn-logout" @onclick="CerrarSesion">Salir</button>
+                </Authorized>
+                <NotAuthorized>
+                    <button class="btn-login" @onclick='() => Navigation.NavigateTo("/login")'>Iniciar sesión</button>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+    </header>
+
+    <main class="checkout-main">
+        <div class="checkout-container">
+            <div class="checkout-header">
+                <h2>📦 Finalizar Compra</h2>
+                <p>Completa los datos para procesar tu pedido.</p>
+            </div>
+
+            @if (!CarritoService.ObtenerItems().Any())
+            {
+                <div class="empty-state">
+                    <span class="empty-icon">🛒</span>
+                    <h3>Tu carrito está vacío</h3>
+                    <p>No tienes productos para procesar.</p>
+                    <button class="btn-continue" @onclick='() => Navigation.NavigateTo("/productos")'>Volver al Catálogo</button>
+                </div>
+            }
+            else
+            {
+                <div class="checkout-content">
+                    
+                    <div class="order-summary-box">
+                        <h3>Resumen del Pedido</h3>
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th style="text-align: center;">Cant.</th>
+                                    <th style="text-align: right;">Precio</th>
+                                    <th style="text-align: right;">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in CarritoService.ObtenerItems())
+                                {
+                                    <tr>
+                                        <td>@item.Producto.Nombre</td>
+                                        <td style="text-align: center;">@item.Cantidad</td>
+                                        <td style="text-align: right;">RD$ @item.Producto.Precio.ToString("N2")</td>
+                                        <td style="text-align: right; font-weight: bold;">
+                                            RD$ @((item.Producto.Precio * item.Cantidad).ToString("N2"))
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+
+                        <div class="total-box">
+                            <span>TOTAL A PAGAR:</span>
+                            <span class="total-amount">RD$ @CalcularTotal().ToString("N2")</span>
+                        </div>
+                    </div>
+
+                    <div class="shipping-form-box">
+                        <h3>Datos de Entrega</h3>
+                        
+                        <div class="form-group">
+                            <label>Dirección de Entrega <span class="required">*</span></label>
+                            <textarea @bind="direccionEntrega" class="form-control" rows="3" placeholder="Ej: Calle Duarte #10, Baní..."></textarea>
+                            @if (mostrarError)
+                            {
+                                <span class="error-text">⚠️ Debes ingresar una dirección para continuar.</span>
+                            }
+                        </div>
+
+                        <button class="btn-confirmar" disabled="@estaProcesando" @onclick="ConfirmarPedido">
+                            @(estaProcesando ? "⏳ Procesando..." : "✅ Confirmar y Realizar Pedido")
+                        </button>
+                    </div>
+
+                </div>
+            }
+        </div>
+    </main>
 </div>
 
 @code {
     private string direccionEntrega = "";
+    private bool mostrarError = false;
+    private bool estaProcesando = false;
+
+    // Método para calcular el total leyendo directamente del servicio actual
+    private decimal CalcularTotal()
+    {
+        return CarritoService.ObtenerItems().Sum(i => i.Producto.Precio * i.Cantidad);
+    }
 
     private async Task ConfirmarPedido()
     {
-        if (string.IsNullOrWhiteSpace(direccionEntrega)) return;
-
-        // 1. Creamos el objeto Pedido real
-        var nuevoPedido = new Pedido
+        // Validación básica
+        if (string.IsNullOrWhiteSpace(direccionEntrega))
         {
-            FechaCreacion = DateTime.Now,
-            Estado = EstadoPedido.Pendiente,
-            // Aquí deberías asignar el Cliente logueado. Por ahora pondremos uno de prueba Id=1
-            Cliente = await _context.Clientes.FindAsync(1),
-            Articulos = CarritoService.Items.Select(i => new DetallePedido
+            mostrarError = true;
+            return;
+        }
+
+        mostrarError = false;
+        estaProcesando = true;
+        StateHasChanged();
+
+        try
+        {
+            // 1. Creamos el objeto Pedido real
+            var nuevoPedido = new Pedido
             {
-                ProductoId = i.ProductoId,
-                Cantidad = i.Cantidad
-            }).ToList()
-        };
+                FechaCreacion = DateTime.Now,
+                Estado = EstadoPedido.Pendiente,
+                // Aquí asumo que ya tienes una entidad Cliente en tu BD. 
+                // Usamos FindAsync(1) como tenías en tu código original.
+                Cliente = await _context.Clientes.FindAsync(1),
+                
+                // Mapeamos los items del carrito al DetallePedido
+                Articulos = CarritoService.ObtenerItems().Select(i => new DetallePedido
+                {
+                    ProductoId = i.Producto.Id, // Usamos i.Producto.Id
+                    Cantidad = i.Cantidad
+                }).ToList()
+            };
 
-        // 2. Guardamos en la Base de Datos
-        _context.Pedidos.Add(nuevoPedido);
-        await _context.SaveChangesAsync();
+            // 2. Guardamos en la Base de Datos
+            _context.Pedidos.Add(nuevoPedido);
+            await _context.SaveChangesAsync();
 
-        // 3. Limpiamos y redirigimos
-        CarritoService.LimpiarCarrito();
-        Navigation.NavigateTo("/confirmacion-exito");
+            // 3. Limpiamos y redirigimos
+            CarritoService.LimpiarCarrito();
+            
+            // Asumo que tienes una página de confirmación, si no, puedes redirigir al home "/"
+            Navigation.NavigateTo("/confirmacion-exito"); 
+        }
+        catch (Exception ex)
+        {
+            // Manejo de errores (en caso de que falle la BD)
+            Console.WriteLine($"Error al guardar pedido: {ex.Message}");
+        }
+        finally
+        {
+            estaProcesando = false;
+        }
+    }
+
+    private void CerrarSesion()
+    {
+        AuthService.CerrarSesion();
+        Navigation.NavigateTo("/", true);
     }
 }
+
+<style>
+    /* =========================================
+       VARIABLES Y RESET
+    ========================================= */
+    .premium-checkout-page { font-family: 'Segoe UI', sans-serif; background-color: #f8fafc; min-height: 100vh; }
+    
+    /* NAVBAR (Comparte el diseño de las otras páginas) */
+    .top-navbar { background: #0b1527; color: white; display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .nav-brand { display: flex; align-items: center; gap: 12px; }
+    .brand-icon { width: 40px; height: 40px; background: #f4b400; color: #0b1527; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 20px; font-weight: bold; }
+    .brand-text h1 { margin: 0; font-size: 22px; font-weight: 800; }
+    .brand-text h1 span { color: #f4b400; }
+    .brand-text p { margin: 0; font-size: 11px; color: #94a3b8; text-transform: uppercase; }
+
+    .nav-links { display: flex; gap: 25px; }
+    .nav-links a { color: #cbd5e1; text-decoration: none; font-weight: 600; font-size: 15px; }
+    .nav-links a:hover { color: #f4b400; }
+
+    .nav-auth { display: flex; align-items: center; gap: 15px; }
+    .btn-login { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 18px; border-radius: 10px; cursor: pointer; font-weight: 600; }
+    .btn-logout { background: transparent; border: none; color: #ef4444; font-weight: 600; cursor: pointer; margin-left: 10px; }
+    
+    .user-pill { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 5px 15px 5px 5px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
+    .user-pill .avatar { width: 35px; height: 35px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .user-info { display: flex; flex-direction: column; }
+    .user-info strong { font-size: 13px; line-height: 1.2; color: white; }
+    .user-info small { font-size: 11px; color: #94a3b8; }
+
+    /* LAYOUT DEL CHECKOUT */
+    .checkout-main { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+    .checkout-container { background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; overflow: hidden; }
+    
+    .checkout-header { background: #0b1527; color: white; padding: 30px; border-bottom: 5px solid #f4b400; text-align: center; }
+    .checkout-header h2 { margin: 0 0 10px 0; font-size: 28px; font-weight: 800; }
+    .checkout-header p { margin: 0; color: #cbd5e1; font-size: 15px; }
+
+    .checkout-content { padding: 40px 30px; display: flex; flex-direction: column; gap: 40px; }
+
+    /* TABLA DE RESUMEN */
+    .order-summary-box h3 { margin: 0 0 20px 0; color: #0f172a; font-size: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+    
+    .modern-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    .modern-table th { background: #f8fafc; color: #64748b; padding: 12px 15px; text-transform: uppercase; font-size: 12px; font-weight: 700; border-bottom: 2px solid #e2e8f0; text-align: left; }
+    .modern-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; color: #0f172a; font-size: 15px; }
+    .modern-table tr:last-child td { border-bottom: none; }
+
+    .total-box { background: #f8fafc; padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px dashed #cbd5e1; }
+    .total-box span { font-size: 16px; font-weight: 700; color: #64748b; }
+    .total-box .total-amount { font-size: 28px; font-weight: 900; color: #16a34a; }
+
+    /* FORMULARIO */
+    .shipping-form-box h3 { margin: 0 0 20px 0; color: #0f172a; font-size: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+    .form-group { margin-bottom: 25px; }
+    .form-group label { display: block; font-weight: 600; color: #475569; margin-bottom: 8px; font-size: 14px; }
+    .form-group label .required { color: #dc2626; }
+    .form-control { width: 100%; padding: 15px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 15px; font-family: inherit; transition: 0.2s; background: #f8fafc; box-sizing: border-box; resize: vertical; }
+    .form-control:focus { outline: none; border-color: #3b82f6; background: white; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+    
+    .error-text { color: #dc2626; font-size: 13px; font-weight: 600; margin-top: 8px; display: block; }
+
+    /* BOTÓN CONFIRMAR */
+    .btn-confirmar { width: 100%; padding: 18px; background: #0b1527; color: white; border: none; border-radius: 14px; font-size: 18px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    .btn-confirmar:hover:not(:disabled) { background: #f4b400; color: #0b1527; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(244,180,0,0.2); }
+    .btn-confirmar:disabled { background: #94a3b8; cursor: not-allowed; }
+
+    /* EMPTY STATE */
+    .empty-state { text-align: center; padding: 60px 20px; }
+    .empty-icon { font-size: 50px; margin-bottom: 15px; display: block; }
+    .empty-state h3 { margin: 0 0 10px 0; color: #0f172a; font-size: 22px; }
+    .empty-state p { margin: 0 0 25px 0; color: #64748b; }
+    .btn-continue { background: #0b1527; color: white; border: none; padding: 12px 25px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s;}
+    .btn-continue:hover { background: #f4b400; color: #0b1527; transform: translateY(-2px); }
+
+    /* RESPONSIVE */
+    @@media (max-width: 768px) {
+        .nav-links { display: none; }
+        .checkout-content { padding: 30px 20px; }
+        .total-box { flex-direction: column; text-align: center; gap: 10px; }
+    }
+</style>

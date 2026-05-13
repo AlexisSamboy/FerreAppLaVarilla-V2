@@ -1,0 +1,169 @@
+﻿@page "/confirmacion-exito"
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
+@inject FerreAppLaVarilla.UI.Services.AutenticacionService AuthService
+
+<PageTitle>Pedido Confirmado - FerreApp La Varilla</PageTitle>
+
+<div class="premium-success-page">
+
+    <header class="top-navbar">
+        <div class="nav-brand" @onclick='() => Navigation.NavigateTo("/")' style="cursor: pointer;">
+            <div class="brand-icon">⚡</div>
+            <div class="brand-text">
+                <h1>FerreApp<span>LaVarilla</span></h1>
+                <p>Ferretería Inteligente</p>
+            </div>
+        </div>
+
+        <nav class="nav-links">
+            <a href="/">Inicio</a>
+            <a href="/productos">Productos</a>
+            <a href="#">Ofertas</a>
+            <a href="#">Nosotros</a>
+        </nav>
+
+        <div class="nav-auth">
+            <AuthorizeView>
+                <Authorized>
+                    <div class="user-pill">
+                        <div class="avatar">👤</div>
+                        <div class="user-info">
+                            <strong>@context.User.Identity?.Name</strong>
+                            <small>Sesión activa</small>
+                        </div>
+                    </div>
+                    <button class="btn-logout" @onclick="CerrarSesion">Salir</button>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+    </header>
+
+    <main class="success-main">
+        <div class="success-card bounce-in">
+            <div class="success-icon-container">
+                <div class="success-ring"></div>
+                <span class="check-mark">✅</span>
+            </div>
+
+            <h1>¡Pedido Recibido!</h1>
+            <p class="subtitle">Gracias por confiar en <strong>FerreApp La Varilla</strong>. Tu solicitud ya está siendo procesada por nuestro equipo en Baní.</p>
+
+            <div class="order-info-box">
+                <div class="info-row">
+                    <span>Número de Pedido:</span>
+                    <strong class="highlight">#@numeroPedido</strong>
+                </div>
+                <div class="info-row">
+                    <span>Tiempo estimado:</span>
+                    <strong>30 - 60 minutos</strong>
+                </div>
+                <div class="info-row">
+                    <span>Estado inicial:</span>
+                    <span class="status-badge">Pendiente</span>
+                </div>
+            </div>
+
+            <div class="next-steps">
+                <h3>¿Qué sigue ahora?</h3>
+                <ul>
+                    <li>🏢 Prepararemos tus artículos en nuestro almacén.</li>
+                    <li>📞 Te llamaremos si hay alguna duda con tu dirección.</li>
+                    <li>🚚 El repartidor se pondrá en camino lo antes posible.</li>
+                </ul>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-primary-yellow" @onclick='() => Navigation.NavigateTo("/")'>🏠 Volver al Inicio</button>
+                <button class="btn-outline-dark" @onclick='() => Navigation.NavigateTo("/productos")'>📦 Seguir Comprando</button>
+            </div>
+        </div>
+    </main>
+</div>
+
+@code {
+    private string numeroPedido = "";
+
+    protected override void OnInitialized()
+    {
+        // Generamos un número aleatorio para que se vea real
+        // En un futuro, podrías pasar el ID real del pedido por la URL
+        Random rnd = new Random();
+        numeroPedido = "FAC-" + rnd.Next(1000, 9999).ToString();
+    }
+
+    private void CerrarSesion()
+    {
+        AuthService.CerrarSesion();
+        Navigation.NavigateTo("/", true);
+    }
+}
+
+<style>
+    /* VARIABLES Y FONDO */
+    .premium-success-page { font-family: 'Segoe UI', sans-serif; background: #f8fafc; min-height: 100vh; }
+    
+    /* NAVBAR (Idéntico a las otras páginas) */
+    .top-navbar { background: #0b1527; color: white; display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .nav-brand { display: flex; align-items: center; gap: 12px; }
+    .brand-icon { width: 40px; height: 40px; background: #f4b400; color: #0b1527; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 20px; font-weight: bold; }
+    .brand-text h1 { margin: 0; font-size: 22px; font-weight: 800; }
+    .brand-text h1 span { color: #f4b400; }
+    .brand-text p { margin: 0; font-size: 11px; color: #94a3b8; text-transform: uppercase; }
+
+    .nav-links { display: flex; gap: 25px; }
+    .nav-links a { color: #cbd5e1; text-decoration: none; font-weight: 600; font-size: 15px; }
+    .nav-links a:hover { color: #f4b400; }
+    
+    .user-pill { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 5px 15px 5px 5px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
+    .avatar { width: 35px; height: 35px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .btn-logout { background: transparent; border: none; color: #ef4444; font-weight: 600; cursor: pointer; margin-left: 10px; }
+
+    /* CONTENIDO PRINCIPAL */
+    .success-main { display: flex; justify-content: center; align-items: center; padding: 60px 20px; }
+    
+    .success-card { background: white; max-width: 550px; width: 100%; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.05); padding: 50px; text-align: center; border: 1px solid #e2e8f0; }
+
+    /* ICONO ANIMADO */
+    .success-icon-container { position: relative; width: 100px; height: 100px; margin: 0 auto 30px auto; display: flex; align-items: center; justify-content: center; }
+    .success-ring { position: absolute; inset: 0; border: 4px solid #f1f5f9; border-top-color: #16a34a; border-radius: 50%; animation: spin 2s linear infinite; }
+    .check-mark { font-size: 50px; z-index: 2; }
+
+    /* TEXTOS */
+    .success-card h1 { font-size: 32px; font-weight: 900; color: #0b1527; margin: 0 0 10px 0; }
+    .subtitle { color: #64748b; font-size: 16px; line-height: 1.6; margin-bottom: 30px; }
+    .subtitle strong { color: #0b1527; }
+
+    /* BOX DE INFO */
+    .order-info-box { background: #f8fafc; border-radius: 20px; padding: 25px; border: 1px dashed #cbd5e1; margin-bottom: 35px; }
+    .info-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 15px; }
+    .info-row:last-child { margin-bottom: 0; }
+    .info-row span { color: #64748b; font-weight: 500; }
+    .highlight { color: #3b82f6; font-size: 18px; }
+    .status-badge { background: #fef3c7; color: #d97706; padding: 4px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; }
+
+    /* NEXT STEPS */
+    .next-steps { text-align: left; margin-bottom: 40px; }
+    .next-steps h3 { font-size: 16px; font-weight: 800; color: #0b1527; margin-bottom: 15px; }
+    .next-steps ul { list-style: none; padding: 0; margin: 0; }
+    .next-steps li { font-size: 14px; color: #475569; margin-bottom: 12px; display: flex; gap: 10px; }
+
+    /* BOTONES */
+    .action-buttons { display: flex; flex-direction: column; gap: 15px; }
+    .btn-primary-yellow { background: #f4b400; color: #0b1527; border: none; padding: 16px; border-radius: 15px; font-weight: 800; font-size: 16px; cursor: pointer; transition: 0.2s; }
+    .btn-primary-yellow:hover { background: #e0a600; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(244,180,0,0.3); }
+    .btn-outline-dark { background: white; border: 2px solid #0b1527; color: #0b1527; padding: 14px; border-radius: 15px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    .btn-outline-dark:hover { background: #f1f5f9; }
+
+    /* ANIMACIONES */
+    @@keyframes spin { to { transform: rotate(360deg); } }
+    .bounce-in { animation: bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    @@keyframes bounceIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    @@media (max-width: 600px) {
+        .nav-links { display: none; }
+        .success-card { padding: 30px 20px; }
+    }
+</style>

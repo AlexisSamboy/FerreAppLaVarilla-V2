@@ -3,116 +3,153 @@
 @using Microsoft.AspNetCore.Authorization
 @using FerreAppLaVarilla.UI.Models
 @using FerreAppLaVarilla.UI.Services
-
 @attribute [Authorize(Roles = "Admin")]
 
-@inject FerreAppLaVarilla.UI.Services.DashboardService _dashboardService
+@inject DashboardService _dashboardService
 @inject NavigationManager _navigation
-@inject FerreAppLaVarilla.UI.Services.AutenticacionService _authService
+@inject AutenticacionService _authService
 
-<PageTitle>Dashboard - FerreAppLaVarilla</PageTitle>
+<PageTitle>Admin Dashboard - FerreApp La Varilla</PageTitle>
 
-<div class="admin-layout">
-
-    <aside class="sidebar">
-        <div class="logo">
-            <span class="logo-icon">⚡</span>
-            <div>
-                <h2>FerreApp<span>LaVarilla</span></h2>
-                <p>Módulo Administrativo</p>
+<div class="admin-container">
+    <aside class="admin-sidebar">
+        <div class="sidebar-header">
+            <div class="logo-icon">⚡</div>
+            <div class="logo-text">
+                <h2>FerreApp</h2>
+                <span>La Varilla</span>
             </div>
         </div>
 
-        <nav class="menu">
-            <a href="/panel-admin" class="menu-item active">📊 Dashboard</a>
-            @* Dentro de Dashboard.razor *@
-<button class="action-btn" style="background: #0b3d91;" 
-        @onclick='() => _navigation.NavigateTo("/admin/gestionar-productos")'>
-    📦 Actualizar Inventario
-</button>
-            <a href="/admin/agregar-producto" class="menu-item">➕ Agregar Producto</a>
-            <a href="/admin/usuarios" class="menu-item">👤 Gestión de Usuarios</a>
-            <a href="/admin/despachos" class="menu-item">🚚 Logística y Despacho</a>
+        <nav class="sidebar-nav">
+            <a href="/panel-admin" class="nav-link active"><span>🏠</span> Inicio</a>
+            <a href="/admin/pedidos" class="nav-link"><span>🛒</span> Pedidos</a>
+            <a href="/admin/gestionar-productos" class="nav-link"><span>📦</span> Productos</a>
+            <a href="/admin/clientes" class="nav-link"><span>👤</span> Clientes</a>
+            <a href="/admin/reportes" class="nav-link"><span>📊</span> Reportes</a>
+            <a href="/admin/configuracion" class="nav-link"><span>⚙️</span> Configuración</a>
         </nav>
 
-        <button class="logout-btn" @onclick="CerrarSesion">Cerrar sesión</button>
+        <div class="sidebar-footer">
+            <div class="admin-pill">
+                <div class="avatar">AD</div>
+                <div class="admin-info">
+                    <strong>Administrador</strong>
+                    <small>admin@ferreapp.com</small>
+                </div>
+            </div>
+            <button class="btn-logout-minimal" @onclick="CerrarSesion">Cerrar Sesión</button>
+        </div>
     </aside>
 
-    <main class="main-content">
-        
-        <header class="topbar">
-            <div class="left-topbar">
-                <div class="menu-toggle">☰</div>
-                <h1 style="font-size: 24px; color: #0d1b2a;">Resumen del Negocio</h1>
+    <main class="admin-main">
+        <header class="admin-topbar">
+            <div class="welcome-text">
+                <h1>¡Bienvenido, Administrador! 👋</h1>
+                <p>Resumen general - @DateTime.Now.ToString("dd MMMM, yyyy")</p>
             </div>
-            <div class="right-topbar">
-                <div class="admin-user">
-                    <div class="avatar">👤</div>
-                    <strong>Administrador</strong>
-                </div>
+            <div class="topbar-actions">
+                <div class="notification-badge">🔔<span>3</span></div>
+                <div class="date-display">📅 @DateTime.Now.ToString("dddd")</div>
             </div>
         </header>
 
         @if (stats == null)
         {
-            <div style="display:flex; justify-content:center; align-items:center; height: 40vh; flex-direction:column;">
-                <div class="spinner"></div>
-                <p style="margin-top:15px; color:#666;">Consultando base de datos SQL...</p>
+            <div class="loader-container">
+                <div class="custom-spinner"></div>
+                <p>Cargando datos del sistema...</p>
             </div>
         }
         else
         {
-            <section class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: #e3f2fd; color: #2196f3;">📦</div>
-                    <div>
-                        <small>Productos Registrados</small>
-                        <h3>@stats.TotalProductos</h3>
+            <section class="stats-cards-grid">
+                <div class="card-stat">
+                    <div class="card-body">
+                        <small>Ventas Hoy</small>
+                        <h2>RD$ @stats.VentasHoy.ToString("N2")</h2>
+                        <span class="trend positive">↗ 12.5%</span>
                     </div>
+                    <div class="card-icon blue">🛒</div>
                 </div>
 
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: #e8f5e9; color: #4caf50;">💰</div>
-                    <div>
-                        <small>Inversión en Inventario</small>
-                        <h3>RD$ @stats.InversionTotal.ToString("N2")</h3>
+                <div class="card-stat">
+                    <div class="card-body">
+                        <small>Pedidos Pendientes</small>
+                        <h2>@stats.PedidosPendientes</h2>
+                        <span class="trend positive">↗ Activos</span>
                     </div>
+                    <div class="card-icon green">📋</div>
                 </div>
 
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: #fff3e0; color: #ff9800;">🏗️</div>
-                    <div>
-                        <small>Stock Físico Total</small>
-                        <h3>@stats.StockTotal unidades</h3>
+                <div class="card-stat">
+                    <div class="card-body">
+                        <small>Productos en Stock</small>
+                        <h2>@stats.StockTotal</h2>
+                        <span class="trend">Total Unidades</span>
                     </div>
+                    <div class="card-icon orange">📦</div>
                 </div>
 
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: #f3e5f5; color: #9c27b0;">👤</div>
-                    <div>
-                        <small>Usuarios del Sistema</small>
-                        <h3>@stats.TotalUsuarios</h3>
+                <div class="card-stat">
+                    <div class="card-body">
+                        <small>Inversión Total</small>
+                        <h2>RD$ @stats.InversionTotal.ToString("N2")</h2>
                     </div>
+                    <div class="card-icon purple">💰</div>
                 </div>
             </section>
 
-            <section style="margin-top: 40px;">
-                <h2 style="margin-bottom: 20px; color: #0d1b2a;">Acciones rápidas</h2>
-                <div style="display: flex; gap: 20px;">
-                    <button class="action-btn" @onclick='() => _navigation.NavigateTo("/admin/agregar-producto")'>
-                        Nuevo Producto
-                    </button>
-                    <button class="action-btn" style="background: #0b3d91;" @onclick='() => _navigation.NavigateTo("/productos")'>
-                        Ver Catálogo
-                    </button>
+            <div class="dashboard-lower-grid">
+                <div class="data-card table-card">
+                    <div class="card-header-flex">
+                        <h3>Últimos pedidos</h3>
+                        <button class="btn-text" @onclick='() => _navigation.NavigateTo("/admin/pedidos")'>Ver todos</button>
+                    </div>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Pedido</th>
+                                <th>Cliente</th>
+                                <th>Estado</th>
+                                <th style="text-align:right;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in stats.UltimosPedidos)
+                            {
+                                <tr>
+                                    <td><strong>@p.Id</strong></td>
+                                    <td>@p.Cliente</td>
+                                    <td><span class="badge @p.Estado.ToLower().Replace(" ", "-")">@p.Estado</span></td>
+                                    <td style="text-align:right; font-weight:700;">RD$ @p.Total.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
-            </section>
+
+                <div class="data-card actions-card">
+                    <h3>Acciones Rápidas</h3>
+                    <div class="actions-buttons-vertical">
+                        <button class="btn-action primary" @onclick='() => _navigation.NavigateTo("/admin/gestionar-productos")'>
+                            📥 Actualizar Inventario
+                        </button>
+                        <button class="btn-action secondary" @onclick='() => _navigation.NavigateTo("/admin/agregar-producto")'>
+                            ➕ Agregar Nuevo Producto
+                        </button>
+                        <button class="btn-action outline" @onclick='() => _navigation.NavigateTo("/productos")'>
+                            🌐 Ver Tienda Pública
+                        </button>
+                    </div>
+                </div>
+            </div>
         }
     </main>
 </div>
 
 @code {
-    // CORRECCIÓN: Agregamos el '?' para solucionar la advertencia CS8618
+    // CORRECCIÓN: Dejamos una sola declaración limpia
     private DashboardStats? stats;
 
     protected override async Task OnInitializedAsync()
@@ -123,38 +160,9 @@
     private void CerrarSesion()
     {
         _authService.CerrarSesion();
-        _navigation.NavigateTo("/");
+        _navigation.NavigateTo("/", true);
     }
 }
-
 <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI"; }
-    body { background: #f7f9fc; }
-    .admin-layout { display: flex; min-height: 100vh; }
-    .sidebar { width: 280px; background: linear-gradient(to bottom, #03182d, #061f3b); color: white; padding: 30px 20px; display: flex; flex-direction: column; }
-    .logo { display: flex; gap: 15px; align-items: center; margin-bottom: 40px; }
-    .logo h2 span { color: #f4b400; }
-    .menu { display: flex; flex-direction: column; gap: 10px; }
-    .menu-item { text-decoration: none; color: white; padding: 14px 18px; border-radius: 12px; transition: .3s; }
-    .menu-item.active { background: #0b3d91; font-weight: bold; }
-    .logout-btn { margin-top: auto; padding: 15px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: white; border-radius: 12px; cursor: pointer; }
-    .main-content { flex: 1; padding: 30px; }
-    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 35px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
-    .left-topbar { display: flex; align-items: center; gap: 20px; }
-    .admin-user { display: flex; align-items: center; gap: 12px; }
-    .avatar { width: 40px; height: 40px; background: #eef2f7; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
-    
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-    .stat-card { background: white; padding: 25px; border-radius: 18px; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
-    .stat-icon { width: 55px; height: 55px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 24px; }
-    .stat-card small { color: #666; text-transform: uppercase; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; }
-    .stat-card h3 { font-size: 22px; color: #0d1b2a; margin-top: 5px; }
-
-    .action-btn { padding: 15px 30px; border-radius: 10px; border: none; background: #28a745; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
-    .action-btn:hover { transform: scale(1.02); }
-
-    .spinner { width: 40px; height: 40px; border: 4px solid #ddd; border-top: 4px solid #2f80ed; border-radius: 50%; animation: spin 1s linear infinite; }
-    
-    /* Nota: Visual Studio mostrará la advertencia CSS041 por las dos arrobas, pero es necesario para que Blazor compile correctamente */
-    @@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @((MarkupString)FerreAppLaVarilla.UI.Services.AdminTheme.EstilosGlobales)
 </style>
