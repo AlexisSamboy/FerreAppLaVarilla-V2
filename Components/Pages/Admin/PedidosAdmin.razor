@@ -4,92 +4,307 @@
 @using Microsoft.EntityFrameworkCore
 @using FerreAppLaVarilla.UI.Data
 @using FerreAppLaVarilla.UI.Models
+@using FerreAppLaVarilla.UI.Services
+
 @attribute [Authorize(Roles = "Admin")]
 
 @inject ApplicationDbContext _context
 @inject NavigationManager _navigation
+@inject AutenticacionService AuthService
 
-<div class="admin-container">
-    <aside class="admin-sidebar">
-        <div class="sidebar-header">
-            <div class="logo-icon">⚡</div>
-            <div class="logo-text"><h2>FerreApp</h2><span>La Varilla</span></div>
+<PageTitle>Gestión de Pedidos - FerreApp La Varilla</PageTitle>
+
+@* --- MODAL DE DETALLES Y EDICIÓN --- *@
+@if (mostrarModal && pedidoSeleccionado != null)
+{
+    <div class="modal-overlay">
+        <div class="premium-modal bounce-in">
+            <div class="modal-header-flex">
+                <h3>Detalle del Pedido #@pedidoSeleccionado.Id.ToString().PadLeft(5, '0')</h3>
+                <button class="btn-close-minimal" @onclick="CerrarModal">✕</button>
+            </div>
+            
+            <div class="modal-content">
+                <div class="order-info-grid">
+                    <div>
+                        <small>Cliente</small>
+                        <strong>@(pedidoSeleccionado.Cliente?.CorreoElectronico ?? "Consumidor Final")</strong>
+                    </div>
+                    <div>
+                        <small>Fecha</small>
+                        <strong>@pedidoSeleccionado.FechaCreacion.ToString("dd MMM yyyy - HH:mm")</strong>
+                    </div>
+                    <div>
+                        <small>Total a Pagar</small>
+                        <strong style="color: #28a745;">RD$ @pedidoSeleccionado.Total.ToString("N2")</strong>
+                    </div>
+                </div>
+
+                <div class="form-group-admin" style="margin-top: 20px;">
+                    <label>Cambiar Estado del Pedido</label>
+                    <select class="admin-input" value="@pedidoSeleccionado.Estado" @onchange="ActualizarEstado">
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="EnRuta">En Ruta</option>
+                        <option value="Entregado">Entregado</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </select>
+                </div>
+
+                <div class="items-list" style="margin-top: 20px; background: #f8fafc; padding: 15px; border-radius: 10px;">
+                    <h4 style="margin-bottom: 10px; font-size: 14px; color: #64748b;">Artículos:</h4>
+                    @if (pedidoSeleccionado.Articulos != null && pedidoSeleccionado.Articulos.Any())
+                    {
+                        @foreach (var art in pedidoSeleccionado.Articulos)
+                        {
+                            <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #cbd5e1; padding: 5px 0; font-size: 14px;">
+                                <span>@art.Producto?.Nombre</span>
+                                <strong>@art.Cantidad uds.</strong>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p style="font-size: 13px; color: #999;">No hay detalles de artículos para mostrar.</p>
+                    }
+                </div>
+            </div>
+
+            <div class="modal-footer-flex">
+                <button class="btn-action primary" style="width: 100%;" @onclick="CerrarModal">Aceptar</button>
+            </div>
         </div>
-        <nav class="sidebar-nav">
-            <a href="/panel-admin" class="nav-link"><span>🏠</span> Inicio</a>
-            <a href="/admin/pedidos" class="nav-link active"><span>🛒</span> Pedidos</a>
-            <a href="/admin/gestionar-productos" class="nav-link"><span>📦</span> Productos</a>
-            <a href="/admin/clientes" class="nav-link"><span>👤</span> Clientes</a>
-            <a href="/admin/configuracion" class="nav-link"><span>⚙️</span> Configuración</a>
+    </div>
+}
+
+<div class="ferreapp-admin-layout">
+
+    <aside class="ferreapp-sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon-bg"><span class="logo-icon">⚡</span></div>
+            <div class="logo-text"><h2>FerreApp</h2><span>LA VARILLA</span></div>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <a href="/panel-admin" class="menu-link"><span class="menu-icon">🏠</span> Inicio</a>
+            <a href="/admin/pedidos" class="menu-link active"><span class="menu-icon">🛒</span> Pedidos</a>
+            <a href="/admin/gestionar-productos" class="menu-link"><span class="menu-icon">📦</span> Productos</a>
+            <a href="/admin/clientes" class="menu-link"><span class="menu-icon">👤</span> Clientes</a>
+            <a href="/admin/reportes" class="menu-link"><span class="menu-icon">📊</span> Reportes</a>
+            <a href="/admin/configuracion" class="menu-link"><span class="menu-icon">⚙️</span> Configuración</a>
         </nav>
+
+        <div class="sidebar-footer">
+            <div class="admin-profile">
+                <div class="admin-avatar">AD</div>
+                <div class="admin-info">
+                    <strong>Administrador</strong>
+                    <small>admin@ferreapp.com</small>
+                </div>
+            </div>
+            <button class="btn-logout" @onclick="CerrarSesion">Cerrar Sesión</button>
+        </div>
     </aside>
 
-    <main class="admin-main">
-        <header class="admin-topbar">
-            <div class="welcome-text">
+    <main class="ferreapp-main">
+        <header class="topbar-header">
+            <div class="header-titles">
                 <h1>Gestión de Pedidos 🛒</h1>
                 <p>Monitorea y actualiza el estado de las ventas realizadas.</p>
             </div>
         </header>
 
-        <div class="data-card">
-            <div class="card-header-flex">
+        <div class="premium-card">
+            <div class="card-header-with-action" style="margin-bottom: 20px;">
                 <h3>Listado Maestro de Pedidos</h3>
                 <div class="search-box">
-                    <input type="text" placeholder="Buscar por cliente o ID..." />
+                    <input type="text" class="custom-input" placeholder="Buscar por cliente o ID..." @bind="terminoBusqueda" @bind:event="oninput" />
                 </div>
             </div>
 
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>ID Pedido</th>
-                        <th>Fecha</th>
-                        <th>Cliente</th>
-                        <th>Estado</th>
-                        <th>Total</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var pedido in listaPedidos)
-                    {
+            @if (listaPedidos == null)
+            {
+                <div class="loader-container"><div class="spinner"></div></div>
+            }
+            else
+            {
+                <table class="admin-table">
+                    <thead>
                         <tr>
-                            <td><strong>#@pedido.Id.ToString().PadLeft(5, '0')</strong></td>
-                            <td>@pedido.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</td>
-            
-                            @* CAMBIO 1: Usamos Correo o ID si Nombre no existe en tu clase Cliente/Usuario *@
-                            <td>@(pedido.Cliente != null ? pedido.Cliente.CorreoElectronico : "Consumidor Final")</td>
-            
-                            <td><span class="badge @pedido.Estado.ToString().ToLower()">@pedido.Estado</span></td>
-            
-                            @* CAMBIO 2: Ponemos 0.00 temporalmente si el campo Total no existe en tu tabla Pedido *@
-                            <td>RD$ 0.00</td>
-
-                            <td>
-                                <button class="btn-icon-action" title="Ver detalles">👁️</button>
-                                <button class="btn-icon-action edit" title="Cambiar estado">📝</button>
-                            </td>
+                            <th>ID Pedido</th>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th>Estado</th>
+                            <th>Total</th>
+                            <th style="text-align: center;">Acciones</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var pedido in PedidosFiltrados)
+                        {
+                            <tr>
+                                <td><strong>#@pedido.Id.ToString().PadLeft(5, '0')</strong></td>
+                                <td>@pedido.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@(pedido.Cliente != null ? pedido.Cliente.CorreoElectronico : "Consumidor Final")</td>
+                                <td><span class="badge @pedido.Estado.ToString().ToLower()">@pedido.Estado</span></td>
+                                
+                                @* DATO REAL DE LA BASE DE DATOS *@
+                                <td><strong>RD$ @pedido.Total.ToString("N2")</strong></td>
+
+                                <td style="text-align: center;">
+                                    <button class="btn-icon-action view" title="Ver/Editar" @onclick="() => AbrirModal(pedido)">👁️</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                
+                @if (!PedidosFiltrados.Any())
+                {
+                    <div style="text-align: center; padding: 30px; color: #94a3b8;">
+                        No se encontraron pedidos con esa búsqueda.
+                    </div>
+                }
+            }
         </div>
     </main>
 </div>
 
 @code {
-    private List<Pedido> listaPedidos = new();
+    private List<Pedido>? listaPedidos;
+    private string terminoBusqueda = "";
+    
+    // Variables para el Modal
+    private bool mostrarModal = false;
+    private Pedido? pedidoSeleccionado;
 
     protected override async Task OnInitializedAsync()
     {
+        await CargarPedidos();
+    }
+
+    private async Task CargarPedidos()
+    {
+        // Traemos pedidos con cliente y artículos para el modal
         listaPedidos = await _context.Pedidos
             .Include(p => p.Cliente)
+            .Include(p => p.Articulos).ThenInclude(a => a.Producto)
             .OrderByDescending(p => p.FechaCreacion)
             .ToListAsync();
+    }
+
+   private IEnumerable<Pedido> PedidosFiltrados =>
+        string.IsNullOrWhiteSpace(terminoBusqueda)
+            ? listaPedidos ?? Enumerable.Empty<Pedido>()
+            : listaPedidos!.Where(p => 
+                p.Id.ToString().Contains(terminoBusqueda) || 
+                (p.Cliente != null && 
+                 !string.IsNullOrEmpty(p.Cliente.CorreoElectronico) && // <--- ESTE ES EL ESCUDO
+                 p.Cliente.CorreoElectronico.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase)));
+
+    private void AbrirModal(Pedido pedido)
+    {
+        pedidoSeleccionado = pedido;
+        mostrarModal = true;
+    }
+
+    private void CerrarModal()
+    {
+        mostrarModal = false;
+        pedidoSeleccionado = null;
+    }
+
+    private async Task ActualizarEstado(ChangeEventArgs e)
+    {
+        if (pedidoSeleccionado != null && Enum.TryParse<EstadoPedido>(e.Value?.ToString(), out var nuevoEstado))
+        {
+            pedidoSeleccionado.Estado = nuevoEstado;
+            _context.Pedidos.Update(pedidoSeleccionado);
+            await _context.SaveChangesAsync();
+            await CargarPedidos(); // Refrescar lista
+        }
+    }
+
+    private void CerrarSesion()
+    {
+        AuthService.CerrarSesion();
+        _navigation.NavigateTo("/");
     }
 }
 
 <style>
-    @((MarkupString)FerreAppLaVarilla.UI.Services.AdminTheme.EstilosGlobales)
+    /* Usamos el Tema Global */
+    @((MarkupString)AdminTheme.EstilosGlobales)
+
+    /* ESTILOS DEL SIDEBAR Y LAYOUT (Mantenidos del dashboard real) */
+    .ferreapp-admin-layout { display: flex; min-height: 100vh; background-color: #f4f7fe; }
+    .ferreapp-sidebar { width: 260px; background-color: #0b1527; color: white; display: flex; flex-direction: column; padding: 25px 20px; }
+    .sidebar-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
+    .logo-icon-bg { background-color: #f59e0b; padding: 8px 12px; border-radius: 10px; }
+    .logo-icon { font-size: 20px; color: white; }
+    .logo-text h2 { font-size: 20px; margin: 0; color: white; font-weight: 700; }
+    .logo-text span { font-size: 11px; color: #f59e0b; letter-spacing: 1px; text-transform: uppercase; }
+    
+    .sidebar-menu { display: flex; flex-direction: column; gap: 5px; flex-grow: 1; }
+    .menu-link { display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: #94a3b8; text-decoration: none; border-radius: 10px; font-weight: 500; font-size: 15px; transition: 0.3s; }
+    .menu-link:hover { color: white; background-color: rgba(255,255,255,0.05); }
+    .menu-link.active { background-color: #1e293b; color: white; border-left: 4px solid #f59e0b; border-radius: 0 10px 10px 0; }
+    
+    .sidebar-footer { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
+    .admin-profile { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+    .admin-avatar { width: 40px; height: 40px; background-color: #3b82f6; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+    .admin-info strong { display: block; font-size: 14px; }
+    .admin-info small { color: #94a3b8; font-size: 12px; }
+    .btn-logout { width: 100%; padding: 10px; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+    .btn-logout:hover { background: rgba(255,255,255,0.1); }
+
+    .ferreapp-main { flex: 1; padding: 40px; overflow-y: auto; }
+    .topbar-header { margin-bottom: 30px; }
+    .header-titles h1 { font-size: 28px; font-weight: 800; color: #0f172a; margin-bottom: 5px; }
+    .header-titles p { color: #64748b; font-size: 15px; }
+
+    .premium-card { background-color: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.02); }
+    .card-header-with-action { display: flex; justify-content: space-between; align-items: center; }
+    .card-header-with-action h3 { font-size: 18px; font-weight: 700; color: #0f172a; margin: 0; }
+    
+    .custom-input { padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 10px; outline: none; font-size: 14px; width: 250px; }
+    .custom-input:focus { border-color: #3b82f6; }
+
+    /* ESTILOS DE LA TABLA */
+    .admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    .admin-table th { text-align: left; padding: 15px; border-bottom: 2px solid #e2e8f0; color: #64748b; font-size: 13px; text-transform: uppercase; }
+    .admin-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 14px; vertical-align: middle; }
+    .admin-table tr:hover { background-color: #f8fafc; }
+
+    /* BADGES DE ESTADO */
+    .badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .badge.pendiente { background: #fffbeb; color: #d97706; }
+    .badge.enruta { background: #eff6ff; color: #2563eb; }
+    .badge.entregado, .badge.completado { background: #f0fdf4; color: #059669; }
+    .badge.cancelado { background: #fef2f2; color: #dc2626; }
+
+    /* BOTONES ACCIÓN TABLA */
+    .btn-icon-action { width: 35px; height: 35px; border: 1px solid #e2e8f0; border-radius: 8px; background: white; cursor: pointer; transition: 0.2s; }
+    .btn-icon-action.view:hover { background: #eff6ff; border-color: #3b82f6; }
+
+    /* MODAL PREMIUM */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 21, 39, 0.7); display: flex; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); }
+    .premium-modal { background: white; padding: 30px; border-radius: 20px; width: 100%; max-width: 500px; box-shadow: 0 25px 50px rgba(0,0,0,0.25); }
+    .modal-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-header-flex h3 { margin: 0; font-size: 20px; color: #0b1527; }
+    .btn-close-minimal { background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8; }
+    .btn-close-minimal:hover { color: #ef4444; }
+    
+    .order-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; }
+    .order-info-grid small { display: block; color: #64748b; font-size: 12px; margin-bottom: 4px; }
+    .order-info-grid strong { color: #0f172a; font-size: 14px; }
+    
+    .form-group-admin label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #475569; }
+    .admin-input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; outline: none; }
+    
+    .modal-footer-flex { margin-top: 25px; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+    .btn-action.primary { background: #0b1527; color: white; padding: 12px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; }
+    .btn-action.primary:hover { background: #f59e0b; color: #0b1527; }
+    
+    .bounce-in { animation: bounceIn 0.3s ease-out forwards; }
+    @@keyframes bounceIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 </style>

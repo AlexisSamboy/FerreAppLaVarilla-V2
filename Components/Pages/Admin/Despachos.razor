@@ -7,182 +7,218 @@
 
 @attribute [Authorize(Roles = "Admin")]
 
-@* INYECCIONES REALES *@
 @inject ApplicationDbContext _context
 @inject FerreAppLaVarilla.UI.Models.ServicioDespacho _servicioDespacho
 @inject NavigationManager Navigation
 @inject FerreAppLaVarilla.UI.Services.AutenticacionService AuthService
 
-<PageTitle>Área de Despacho</PageTitle>
+<PageTitle>Área de Despacho - FerreApp La Varilla</PageTitle>
 
-<div class="layout admin-layout">
+<div class="admin-container">
 
-    <aside class="sidebar">
-        <div class="logo">
-            <span class="logo-icon">⚡</span>
-            <div>
-                <h2>FerreApp<span>LaVarilla</span></h2>
-                <p>Módulo Logístico</p>
+    <aside class="admin-sidebar">
+        <div class="sidebar-header">
+            <div class="logo-icon">⚡</div>
+            <div class="logo-text">
+                <h2>FerreApp</h2>
+                <span>La Varilla</span>
             </div>
         </div>
-        <nav class="menu">
-            <a href="/panel-admin" class="menu-item">📊 Dashboard</a>
-            <a href="/admin/gestionar-productos" class="menu-item">📦 Inventario</a>
-            <a href="/admin/despacho" class="menu-item active">🚚 Despacho</a>
+        <nav class="sidebar-nav">
+            <a href="/panel-admin" class="nav-link"><span>🏠</span> Inicio</a>
+            <a href="/admin/pedidos" class="nav-link"><span>🛒</span> Pedidos</a>
+            <a href="/admin/gestionar-productos" class="nav-link"><span>📦</span> Productos</a>
+            <a href="/admin/clientes" class="nav-link"><span>👤</span> Clientes</a>
+            <a href="/admin/despacho" class="nav-link active"><span>🚚</span> Despacho</a>
+            <a href="/admin/reportes" class="nav-link"><span>📊</span> Reportes</a>
+            <a href="/admin/configuracion" class="nav-link"><span>⚙️</span> Configuración</a>
         </nav>
-        <button class="logout-btn" @onclick="CerrarSesion">Cerrar sesión</button>
+        <div class="sidebar-footer">
+            <div class="admin-pill">
+                <div class="avatar">AD</div>
+                <div class="admin-info">
+                    <strong>Administrador</strong>
+                    <small>admin@ferreapp.com</small>
+                </div>
+            </div>
+            <button class="btn-logout-minimal" @onclick="CerrarSesion">Cerrar Sesión</button>
+        </div>
     </aside>
 
-    <main class="content main-content">
+    <main class="admin-main">
 
-        <header class="topbar">
-            <h1>Panel de Control de Despachos</h1>
+        <header class="admin-topbar">
+            <div class="welcome-text">
+                <h1>Control de Despachos 🚚</h1>
+                <p>Asigna camiones y monitorea el estado de las entregas en tiempo real.</p>
+            </div>
+            <div class="topbar-actions">
+                <div class="date-display">📅 @DateTime.Now.ToString("dddd, dd MMM")</div>
+            </div>
         </header>
 
         @if (!string.IsNullOrEmpty(mensajeAlerta))
         {
-            <div style="padding: 15px; margin-bottom: 20px; border-radius: 8px; font-weight: bold; 
-                 background-color: @(huboError ? "#ffebee" : "#e8f5e9"); 
-                 color: @(huboError ? "#d32f2f" : "#2e7d32");">
+            <div class="alert-banner @(huboError ? "error" : "success")">
                 @(huboError ? "❌ " : "✅ ") @mensajeAlerta
             </div>
         }
 
-        <div class="cards" style="display: flex; gap: 15px; margin-bottom: 20px;">
-            <div class="card-metric" style="flex:1; padding: 20px; border-radius: 10px; background: #e3f2fd; border-left: 5px solid #2196f3;">
-                <h4>Pendientes</h4>
-                <h2>@PedidosPendientes()</h2>
+        <section class="stats-cards-grid" style="margin-bottom: 30px;">
+            <div class="card-stat">
+                <div class="card-body">
+                    <small>Pendientes de envío</small>
+                    <h2>@PedidosPendientes()</h2>
+                </div>
+                <div class="card-icon orange">📦</div>
             </div>
-            <div class="card-metric" style="flex:1; padding: 20px; border-radius: 10px; background: #fff3e0; border-left: 5px solid #ff9800;">
-                <h4>En Ruta</h4>
-                <h2>@PedidosEnRuta()</h2>
+            <div class="card-stat">
+                <div class="card-body">
+                    <small>En Ruta (Tránsito)</small>
+                    <h2>@PedidosEnRuta()</h2>
+                </div>
+                <div class="card-icon blue">🚚</div>
             </div>
-            <div class="card-metric" style="flex:1; padding: 20px; border-radius: 10px; background: #e8f5e9; border-left: 5px solid #4caf50;">
-                <h4>Entregados</h4>
-                <h2>@PedidosEntregados()</h2>
+            <div class="card-stat">
+                <div class="card-body">
+                    <small>Entregados Hoy</small>
+                    <h2>@PedidosEntregados()</h2>
+                </div>
+                <div class="card-icon green">✅</div>
             </div>
-        </div>
+        </section>
 
-        <div style="margin-bottom: 20px;">
-            <label style="font-weight: bold; margin-right: 10px;">Filtrar por estado:</label>
-            <select @bind="filtroEstado" style="padding: 10px; border-radius: 8px; border: 1px solid #ccc; outline: none;">
-                <option value="Todos">Todos</option>
-                <option value="Pendiente">Pendiente</option>
-                <option value="EnRuta">En Ruta</option>
-                <option value="Entregado">Entregado</option>
-            </select>
-        </div>
+        <div class="despacho-grid">
+            
+            <div class="data-card list-card">
+                <div class="card-header-flex" style="margin-bottom: 20px;">
+                    <h3>Cola de Pedidos</h3>
+                    <select class="admin-input-sm" @bind="filtroEstado" style="width: auto;">
+                        <option value="Todos">Todos los estados</option>
+                        <option value="Pendiente">Pendientes</option>
+                        <option value="EnRuta">En Ruta</option>
+                        <option value="Entregado">Entregados</option>
+                    </select>
+                </div>
 
-        <div class="main-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
-
-            <div class="tabla" style="background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden;">
                 @if (pedidos == null)
                 {
-                    <p style="padding: 20px;">Cargando pedidos de SQL Server...</p>
+                    <div class="loader-container" style="height: 200px;">
+                        <div class="custom-spinner"></div>
+                        <p>Cargando pedidos...</p>
+                    </div>
                 }
                 else if (!PedidosFiltrados().Any())
                 {
-                    <p style="padding: 20px;">No hay pedidos con este estado.</p>
+                    <div style="text-align: center; padding: 40px; color: #64748b;">
+                        <p>No hay pedidos con el estado seleccionado.</p>
+                    </div>
                 }
                 else
                 {
-                    @foreach (var pedido in PedidosFiltrados())
-                    {
-                        <div class="fila" @onclick="() => SeleccionarPedido(pedido)" 
-                             style="display: grid; grid-template-columns: 1fr 2fr 1fr 1fr; padding: 15px 20px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s;">
-                            
-                            <div>
-                                <strong>#@pedido.Id</strong><br />
-                                <small style="color: #666;">@pedido.FechaCreacion.ToString("dd/MM/yyyy")</small>
-                            </div>
-
-                            <div>Cliente ID: @(pedido.Cliente?.Id ?? 0)</div> 
-
-                            <div>
-                                <strong>RD$ @(pedido.Articulos?.Sum(a => (double)a.Producto.Precio * a.Cantidad).ToString("N2") ?? "0.00")</strong>
-                            </div>
-
-                            <div>
-                                <span style="padding: 5px 10px; border-radius: 50px; font-size: 12px; font-weight: bold;
-                                      background: @ObtenerColorEstado(pedido.Estado); color: white;">
-                                    @pedido.Estado.ToString()
-                                </span>
-                            </div>
-
-                        </div>
-                    }
-                }
-            </div>
-
-            <div class="detalle" style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); align-self: start;">
-
-                @if (pedidoSeleccionado != null)
-                {
-                    <h3 style="border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
-                        Detalle del Pedido #@pedidoSeleccionado.Id
-                    </h3>
-
-                    <p><strong>Fecha:</strong> @pedidoSeleccionado.FechaCreacion.ToString("dd/MM/yyyy")</p>
-                    <p><strong>Estado Actual:</strong> @pedidoSeleccionado.Estado.ToString()</p>
-
-                    <h4 style="margin-top: 20px; margin-bottom: 10px;">Artículos Solicitados</h4>
-                    <div style="background: #f8fafc; padding: 10px; border-radius: 8px;">
-                        @if (pedidoSeleccionado.Articulos != null)
+                    <div class="order-list">
+                        @foreach (var pedido in PedidosFiltrados())
                         {
-                            @foreach (var item in pedidoSeleccionado.Articulos)
-                            {
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px;">
-                                    <span>@item.Producto?.Nombre</span>
-                                    <strong>x @item.Cantidad</strong>
+                            <div class="order-list-item @(pedidoSeleccionado?.Id == pedido.Id ? "selected" : "")" @onclick="() => SeleccionarPedido(pedido)">
+                                <div class="order-list-header">
+                                    <strong>#PED-@pedido.Id.ToString().PadLeft(5, '0')</strong>
+                                    <span class="badge @pedido.Estado.ToString().ToLower()">@pedido.Estado.ToString()</span>
                                 </div>
-                            }
+                                <div class="order-list-body">
+                                    <span>👤 @(pedido.Cliente?.CorreoElectronico ?? "Consumidor Final")</span>
+                                    <strong>RD$ @pedido.Total.ToString("N2")</strong>
+                                </div>
+                                <small class="order-date">📅 @pedido.FechaCreacion.ToString("dd MMM yyyy - HH:mm")</small>
+                            </div>
                         }
                     </div>
+                }
+            </div>
 
-                    <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;" />
+            <div class="data-card action-panel-card">
+                
+                @if (pedidoSeleccionado != null)
+                {
+                    <div class="action-panel-header">
+                        <h2>Detalle del Pedido #@pedidoSeleccionado.Id.ToString().PadLeft(5, '0')</h2>
+                        <span class="badge @pedidoSeleccionado.Estado.ToString().ToLower()">@pedidoSeleccionado.Estado.ToString()</span>
+                    </div>
 
-                    @if (pedidoSeleccionado.Estado.ToString() == "Pendiente")
-                    {
-                        <div style="margin-bottom: 15px;">
-                            <label style="font-weight: bold; font-size: 13px;">Asignar Camión Disponible:</label>
-                            <select @bind="camionSeleccionadoId" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-top: 5px;">
-                                <option value="0">-- Seleccionar --</option>
+                    <div class="order-details-section">
+                        <h4>📋 Artículos a despachar</h4>
+                        <div class="items-container">
+                            @if (pedidoSeleccionado.Articulos != null)
+                            {
+                                @foreach (var item in pedidoSeleccionado.Articulos)
+                                {
+                                    <div class="item-row">
+                                        <span>@item.Producto?.Nombre</span>
+                                        <strong>@item.Cantidad uds.</strong>
+                                    </div>
+                                }
+                            }
+                        </div>
+                        <div class="total-row">
+                            <span>Monto Total:</span>
+                            <strong>RD$ @pedidoSeleccionado.Total.ToString("N2")</strong>
+                        </div>
+                    </div>
+
+                    <div class="logistics-action-section">
+                        
+                        @if (pedidoSeleccionado.Estado.ToString() == "Pendiente")
+                        {
+                            <h4>🚚 Asignación de Unidad</h4>
+                            <p>Selecciona un camión disponible para enviar este pedido.</p>
+                            
+                            <select class="admin-input" @bind="camionSeleccionadoId" style="margin-bottom: 15px;">
+                                <option value="0">-- Seleccionar Camión --</option>
                                 @foreach (var cam in camionesLibres)
                                 {
-                                    <option value="@cam.Id">@cam.Placa (Cap: @cam.CapacidadMaxima kg)</option>
+                                    <option value="@cam.Id">Placa: @cam.Placa | Capacidad: @cam.CapacidadMaxima kg</option>
                                 }
                             </select>
-                        </div>
 
-                        <button style="width: 100%; padding: 12px; background: #0b3d91; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s;" 
-                                @onclick="DespacharPedidoLogica">
-                            🚀 Procesar y Despachar
-                        </button>
-                    }
-                    else if (pedidoSeleccionado.Estado.ToString() == "EnRuta" || pedidoSeleccionado.Estado.ToString() == "EnTransito")
-                    {
-                        <button style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;" 
-                                @onclick="MarcarComoEntregado">
-                            ✅ Confirmar Entrega
-                        </button>
-                    }
-                    else
-                    {
-                        <div style="text-align: center; color: #28a745; font-weight: bold; padding: 15px; background: #e8f5e9; border-radius: 8px;">
-                            Este pedido ya fue procesado.
-                        </div>
-                    }
+                            <button class="btn-action primary" style="width: 100%;" @onclick="DespacharPedidoLogica">
+                                🚀 Iniciar Despacho
+                            </button>
+                        }
+                        else if (pedidoSeleccionado.Estado.ToString() == "EnRuta" || pedidoSeleccionado.Estado.ToString() == "EnTransito")
+                        {
+                            <div class="transit-info">
+                                <h4>📍 Información de Tránsito</h4>
+                                <p><strong>Unidad Asignada:</strong> @(pedidoSeleccionado.CamionAsignado?.Placa ?? "N/A")</p>
+                                <p>El pedido está actualmente en camino hacia el cliente.</p>
+                            </div>
+                            
+                            <button class="btn-action" style="width: 100%; background: #10b981; color: white;" @onclick="MarcarComoEntregado">
+                                ✅ Confirmar Entrega Realizada
+                            </button>
+                        }
+                        else
+                        {
+                            <div class="success-info">
+                                <h4>🎉 Proceso Completado</h4>
+                                <p>Este pedido ya fue entregado al cliente y el proceso logístico está cerrado.</p>
+                                @if(pedidoSeleccionado.CamionAsignado != null)
+                                {
+                                    <p><strong>Entregado por unidad:</strong> @pedidoSeleccionado.CamionAsignado.Placa</p>
+                                }
+                            </div>
+                        }
+
+                    </div>
                 }
                 else
                 {
-                    <div style="text-align: center; color: #999; padding: 40px 0;">
-                        <span style="font-size: 40px;">📦</span>
-                        <p style="margin-top: 10px;">Selecciona un pedido de la lista para ver sus detalles y gestionarlo.</p>
+                    <div class="empty-state-panel">
+                        <div class="icon">📦</div>
+                        <h3>Ningún pedido seleccionado</h3>
+                        <p>Haz clic en un pedido de la lista izquierda para ver sus detalles y gestionar su despacho.</p>
                     </div>
                 }
 
             </div>
-
         </div>
 
     </main>
@@ -196,7 +232,6 @@
     private int camionSeleccionadoId;
     
     private string filtroEstado = "Todos";
-    
     private string mensajeAlerta = "";
     private bool huboError = false;
 
@@ -213,6 +248,7 @@
                 .Include(p => p.Cliente)
                 .Include(p => p.Articulos).ThenInclude(a => a.Producto)
                 .Include(p => p.CamionAsignado)
+                .OrderByDescending(p => p.FechaCreacion) // Mostramos los más recientes primero
                 .ToListAsync();
 
             camionesLibres = await _context.Camiones
@@ -222,7 +258,7 @@
         catch (Exception ex)
         {
             huboError = true;
-            mensajeAlerta = "Error cargando la BD: " + ex.Message;
+            mensajeAlerta = "Error cargando datos: " + ex.Message;
         }
     }
 
@@ -237,13 +273,11 @@
     {
         if (pedidos == null || !pedidos.Any()) return Enumerable.Empty<Pedido>();
 
-        if (filtroEstado == "Todos")
-            return pedidos;
-
+        if (filtroEstado == "Todos") return pedidos;
+        
         return pedidos.Where(p => p.Estado.ToString() == filtroEstado);
     }
 
-    // CONEXIÓN CON LA LÓGICA DE NEGOCIO
     private async Task DespacharPedidoLogica()
     {
         mensajeAlerta = "";
@@ -260,17 +294,22 @@
 
         try
         {
-            // Ejecutamos las validaciones matemáticas
             _servicioDespacho.ProcesarDespacho(pedidoSeleccionado!, camionElegido!);
 
             pedidoSeleccionado!.CamionAsignado = camionElegido!;
+            // Aseguramos que el estado cambie usando el Enum
+            if(Enum.TryParse<EstadoPedido>("EnRuta", out var estadoRuta))
+            {
+               pedidoSeleccionado.Estado = estadoRuta;
+            }
+            
             _context.Pedidos.Update(pedidoSeleccionado);
             _context.Camiones.Update(camionElegido!);
             
             await _context.SaveChangesAsync();
 
             huboError = false;
-            mensajeAlerta = "Pedido puesto en tránsito correctamente.";
+            mensajeAlerta = "Pedido asignado al camión y puesto en ruta.";
             pedidoSeleccionado = null; 
             await CargarDatos(); 
         }
@@ -285,14 +324,9 @@
     {
         try 
         {
-            // Aseguramos que cambie al estado entregado (Entregado o Completado)
             if(Enum.TryParse<EstadoPedido>("Entregado", out var estadoEntregado))
             {
                 pedidoSeleccionado!.Estado = estadoEntregado;
-            }
-            else if(Enum.TryParse<EstadoPedido>("Completado", out var estadoCompletado))
-            {
-                pedidoSeleccionado!.Estado = estadoCompletado;
             }
 
             if (pedidoSeleccionado!.CamionAsignado != null)
@@ -304,31 +338,20 @@
             _context.Pedidos.Update(pedidoSeleccionado);
             await _context.SaveChangesAsync();
 
-            mensajeAlerta = "Pedido entregado y camión liberado.";
+            mensajeAlerta = "Pedido marcado como entregado. Camión liberado.";
             pedidoSeleccionado = null;
             await CargarDatos();
         }
         catch(Exception ex)
         {
             huboError = true;
-            mensajeAlerta = "Error al entregar: " + ex.Message;
+            mensajeAlerta = "Error al confirmar entrega: " + ex.Message;
         }
     }
 
-    // UTILIDADES VISUALES Y MATEMÁTICAS
     private int PedidosPendientes() => pedidos?.Count(p => p.Estado.ToString() == "Pendiente") ?? 0;
     private int PedidosEnRuta() => pedidos?.Count(p => p.Estado.ToString() == "EnRuta" || p.Estado.ToString() == "EnTransito") ?? 0;
     private int PedidosEntregados() => pedidos?.Count(p => p.Estado.ToString() == "Entregado" || p.Estado.ToString() == "Completado") ?? 0;
-
-    private string ObtenerColorEstado(EstadoPedido estado)
-    {
-        var e = estado.ToString();
-        if (e == "Pendiente") return "#f39c12"; // Naranja
-        if (e == "EnRuta" || e == "EnTransito") return "#3498db"; // Azul
-        if (e == "Entregado" || e == "Completado") return "#28a745"; // Verde
-        if (e == "Cancelado" || e == "Retrasado") return "#dc3545"; // Rojo
-        return "#6c757d"; // Gris por defecto
-    }
 
     private void CerrarSesion()
     {
@@ -338,30 +361,73 @@
 }
 
 <style>
-    /* ESTILOS GLOBALES DE LA FERREAPP (ESTILO ADMIN) */
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
-    body { background: #f7f9fc; color: #333; }
-    .admin-layout { display: flex; min-height: 100vh; }
+    /* Estilos Globales heredados de AdminTheme */
+    @((MarkupString)FerreAppLaVarilla.UI.Services.AdminTheme.EstilosGlobales)
+
+    /* ALERTAS */
+    .alert-banner { padding: 15px 20px; border-radius: 12px; margin-bottom: 25px; font-weight: 600; font-size: 14px; }
+    .alert-banner.success { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+    .alert-banner.error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+    /* LAYOUT MAESTRO-DETALLE */
+    .despacho-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 25px; align-items: start; }
     
-    /* SIDEBAR */
-    .sidebar { width: 280px; background: linear-gradient(to bottom, #03182d, #061f3b); color: white; padding: 30px 20px; display: flex; flex-direction: column; }
-    .logo { display: flex; gap: 15px; align-items: center; margin-bottom: 40px; }
-    .logo-icon { font-size: 28px; }
-    .logo h2 { font-size: 24px; }
-    .logo h2 span { color: #f4b400; }
-    .logo p { font-size: 13px; opacity: 0.7; }
-    .menu { display: flex; flex-direction: column; gap: 10px; }
-    .menu-item { text-decoration: none; color: white; padding: 14px 18px; border-radius: 12px; transition: 0.3s ease; font-size: 15px; }
-    .menu-item:hover { background: rgba(255, 255, 255, 0.08); }
-    .menu-item.active { background: #0b3d91; font-weight: bold; }
-    .logout-btn { margin-top: auto; padding: 15px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: white; border-radius: 12px; cursor: pointer; transition: 0.3s; }
-    .logout-btn:hover { background: rgba(255,255,255,0.05); }
+    /* COLUMNA IZQUIERDA (LISTA) */
+    .list-card { padding: 20px; max-height: 800px; overflow-y: auto; }
+    .order-list { display: flex; flex-direction: column; gap: 10px; }
+    
+    .order-list-item { border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; cursor: pointer; transition: 0.2s; background: white; }
+    .order-list-item:hover { border-color: #3b82f6; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08); }
+    .order-list-item.selected { border-color: #0b1527; border-left: 4px solid #0b1527; background: #f8fafc; }
+    
+    .order-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .order-list-header strong { font-size: 16px; color: #0f172a; }
+    
+    .order-list-body { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #475569; margin-bottom: 8px; }
+    .order-list-body strong { color: #0f172a; }
+    
+    .order-date { font-size: 12px; color: #94a3b8; }
 
-    /* CONTENT & TOPBAR */
-    .main-content { flex: 1; padding: 30px; }
-    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
-    .topbar h1 { font-size: 26px; color: #0d1b2a; }
+    /* COLUMNA DERECHA (PANEL DE ACCIÓN) */
+    .action-panel-card { padding: 30px; position: sticky; top: 20px; }
+    
+    .action-panel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; }
+    .action-panel-header h2 { margin: 0; font-size: 22px; color: #0f172a; }
+    
+    .order-details-section h4 { font-size: 15px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px; }
+    
+    .items-container { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; margin-bottom: 15px; }
+    .item-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #cbd5e1; font-size: 14px; color: #334155; }
+    .item-row:last-child { border-bottom: none; }
+    
+    .total-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #eff6ff; border-radius: 10px; color: #1e3a8a; font-size: 18px; margin-bottom: 30px; }
+    
+    .logistics-action-section { border-top: 1px solid #e2e8f0; padding-top: 25px; }
+    .logistics-action-section h4 { font-size: 16px; color: #0f172a; margin-bottom: 8px; }
+    .logistics-action-section p { color: #64748b; font-size: 14px; margin-bottom: 15px; line-height: 1.5; }
+    
+    .transit-info { background: #e0f2fe; padding: 20px; border-radius: 12px; border-left: 4px solid #0ea5e9; margin-bottom: 20px; }
+    .transit-info h4 { color: #0369a1; margin-bottom: 10px; }
+    .transit-info p { color: #075985; margin: 0 0 5px 0; }
+    
+    .success-info { background: #ecfdf5; padding: 20px; border-radius: 12px; border-left: 4px solid #10b981; text-align: center; }
+    .success-info h4 { color: #047857; margin-bottom: 10px; font-size: 18px; }
+    .success-info p { color: #065f46; margin: 0; }
 
-    /* TABLA */
-    .fila:hover { background-color: #f8fafc; transform: translateX(5px); }
+    .empty-state-panel { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 400px; text-align: center; color: #94a3b8; }
+    .empty-state-panel .icon { font-size: 60px; margin-bottom: 15px; opacity: 0.5; }
+    .empty-state-panel h3 { color: #475569; margin-bottom: 10px; }
+    .empty-state-panel p { max-width: 300px; line-height: 1.5; }
+
+    /* ESTILOS DE ESTADOS (BADGES) */
+    .badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .badge.pendiente { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+    .badge.enruta, .badge.entransito { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+    .badge.entregado, .badge.completado { background: #f0fdf4; color: #059669; border: 1px solid #a7f3d0; }
+    .badge.cancelado { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+    @@media (max-width: 1100px) {
+        .despacho-grid { grid-template-columns: 1fr; }
+        .action-panel-card { position: static; }
+    }
 </style>

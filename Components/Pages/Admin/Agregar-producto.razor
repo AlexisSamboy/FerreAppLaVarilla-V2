@@ -22,14 +22,15 @@
             </div>
         </div>
 
-        <nav class="menu">
-            <a href="/panel-admin" class="menu-item">📊 Dashboard</a>
-            <a href="/admin/agregar-producto" class="menu-item active" style="color: #f4b400; font-weight: bold; border: 1px dashed #f4b400;">➕ Nuevo Producto</a>
-            <a href="/productos" class="menu-item">📦 Ver Catálogo</a>
-            <a href="#" class="menu-item">📁 Categorías</a>
-            <a href="#" class="menu-item">🛒 Pedidos</a>
-            <a href="#" class="menu-item">👥 Clientes</a>
-            <a href="#" class="menu-item">👤 Usuarios</a>
+          <nav class="sidebar-menu">
+            <a href="/panel-admin" class="menu-link @GetActive("/panel-admin")"><span class="menu-icon">🏠</span> Inicio</a>
+            <a href="/admin/pedidos" class="menu-link @GetActive("/admin/pedidos")"><span class="menu-icon">🛒</span> Pedidos</a>
+            <a href="/admin/gestionar-productos" class="menu-link @GetActive("/admin/gestionar-productos")"><span class="menu-icon">📦</span> Productos</a>
+            <a href="/admin/clientes" class="menu-link @GetActive("/admin/clientes")"><span class="menu-icon">👤</span> Clientes</a>
+            <a href="/admin/usuarios" class="menu-link @GetActive("/admin/usuarios")"><span class="menu-icon">👥</span> Usuarios</a>
+            <a href="/admin/despacho" class="menu-link @GetActive("/admin/despacho")"><span class="menu-icon">🚚</span> Despacho</a>
+            <a href="/admin/reportes" class="menu-link @GetActive("/admin/reportes")"><span class="menu-icon">📊</span> Reportes</a>
+            <a href="/admin/configuracion" class="menu-link @GetActive("/admin/configuracion")"><span class="menu-icon">⚙️</span> Configuración</a>
         </nav>
 
         <button class="logout-btn" @onclick="CerrarSesion">Cerrar sesión</button>
@@ -250,10 +251,16 @@
                 mensajeError += " - " + ex.InnerException.Message;
             }
         }
+
     }
 
     private void Cancelar() => Navigation.NavigateTo("/panel-admin");
     private void CerrarSesion() { AuthService.CerrarSesion(); Navigation.NavigateTo("/"); }
+    private string GetActive(string path) 
+    {
+        
+        return Navigation.Uri.Contains(path) ? "active" : "";
+    }
 }
 
 <style>

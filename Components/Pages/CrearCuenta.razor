@@ -208,7 +208,7 @@
         try
         {
             // 1. Verificar si el correo ya existe
-            var existeUsuario = await _context.Usuarios.AnyAsync(u => u.Correo == modelo.Correo);
+            var existeUsuario = await _context.Usuarios.AnyAsync(u => u.CorreoElectronico == modelo.Correo);
             if (existeUsuario)
             {
                 mensajeError = "Ya existe una cuenta con este correo electrónico.";
@@ -219,8 +219,8 @@
             // 2. Guardar Usuario (Para el Login)
             var user = new Usuario
             {
-                Nombre = modelo.NombreCompleto,
-                Correo = modelo.Correo,
+                NombreCompleto = modelo.NombreCompleto,
+                CorreoElectronico = modelo.Correo,
                 Password = modelo.Password,
                 Rol = "Cliente"
             };

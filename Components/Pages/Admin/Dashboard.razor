@@ -21,13 +21,15 @@
             </div>
         </div>
 
-        <nav class="sidebar-nav">
-            <a href="/panel-admin" class="nav-link active"><span>🏠</span> Inicio</a>
-            <a href="/admin/pedidos" class="nav-link"><span>🛒</span> Pedidos</a>
-            <a href="/admin/gestionar-productos" class="nav-link"><span>📦</span> Productos</a>
-            <a href="/admin/clientes" class="nav-link"><span>👤</span> Clientes</a>
-            <a href="/admin/reportes" class="nav-link"><span>📊</span> Reportes</a>
-            <a href="/admin/configuracion" class="nav-link"><span>⚙️</span> Configuración</a>
+        <nav class="sidebar-menu">
+            <a href="/panel-admin" class="menu-link @GetActive("/panel-admin")"><span class="menu-icon">🏠</span> Inicio</a>
+            <a href="/admin/pedidos" class="menu-link @GetActive("/admin/pedidos")"><span class="menu-icon">🛒</span> Pedidos</a>
+            <a href="/admin/gestionar-productos" class="menu-link @GetActive("/admin/gestionar-productos")"><span class="menu-icon">📦</span> Productos</a>
+            <a href="/admin/clientes" class="menu-link @GetActive("/admin/clientes")"><span class="menu-icon">👤</span> Clientes</a>
+            <a href="/admin/usuarios" class="menu-link @GetActive("/admin/usuarios")"><span class="menu-icon">👥</span> Usuarios</a>
+            <a href="/admin/despacho" class="menu-link @GetActive("/admin/despacho")"><span class="menu-icon">🚚</span> Despacho</a>
+            <a href="/admin/reportes" class="menu-link @GetActive("/admin/reportes")"><span class="menu-icon">📊</span> Reportes</a>
+            <a href="/admin/configuracion" class="menu-link @GetActive("/admin/configuracion")"><span class="menu-icon">⚙️</span> Configuración</a>
         </nav>
 
         <div class="sidebar-footer">
@@ -138,6 +140,9 @@
                         <button class="btn-action secondary" @onclick='() => _navigation.NavigateTo("/admin/agregar-producto")'>
                             ➕ Agregar Nuevo Producto
                         </button>
+                        <button class="btn-action outline" style="border-color: #f4b400; color: #0b1527;" @onclick='() => _navigation.NavigateTo("/admin/vehiculos")'>
+                            🚐 Gestión de Vehículos
+                        </button>
                         <button class="btn-action outline" @onclick='() => _navigation.NavigateTo("/productos")'>
                             🌐 Ver Tienda Pública
                         </button>
@@ -161,6 +166,11 @@
     {
         _authService.CerrarSesion();
         _navigation.NavigateTo("/", true);
+    }
+    private string GetActive(string path)
+    {
+      
+        return _navigation.Uri.Contains(path) ? "active" : "";
     }
 }
 <style>

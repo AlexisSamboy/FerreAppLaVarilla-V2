@@ -1,137 +1,102 @@
 ﻿@page "/admin/usuarios"
-@using static Microsoft.AspNetCore.Components.Web.RenderMode
-@using Microsoft.AspNetCore.Components.Forms
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
 @using FerreAppLaVarilla.UI.Models
+@using FerreAppLaVarilla.UI.Services
+
 @attribute [Authorize(Roles = "Admin")]
-@inject FerreAppLaVarilla.UI.Services.UsuarioService UsuarioService
+
+@inject UsuarioService UsuarioService
 @inject NavigationManager Navigation
+@inject AutenticacionService AuthService
 
-<PageTitle>Gestión de Usuarios - FerreAppLaVarilla</PageTitle>
+<PageTitle>Gestión de Usuarios - FerreApp La Varilla</PageTitle>
 
-<div class="admin-layout">
+<div class="ferreapp-admin-layout">
 
-    <aside class="sidebar">
-        <div class="logo">
-            <span class="logo-icon">⚡</span>
-            <div>
-                <h2>FerreApp<span>LaVarilla</span></h2>
-                <p>Panel de Administración</p>
-            </div>
+    <aside class="ferreapp-sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon-bg"><span style="font-size:20px;">⚡</span></div>
+            <div class="logo-text"><h2>FerreApp</h2><span>LA VARILLA</span></div>
         </div>
-
-        <nav class="menu">
-            <a href="/panel-admin" class="menu-item">📊 Dashboard</a>
-            <a href="/admin/agregar-producto" class="menu-item">➕ Nuevo Producto</a>
-            <a href="/productos" class="menu-item">📦 Ver Catálogo</a>
-            <a href="/admin/usuarios" class="menu-item active">👤 Usuarios</a>
+        
+        <nav class="sidebar-menu">
+            <a href="/panel-admin" class="menu-link @GetActive("/panel-admin")"><span class="menu-icon">🏠</span> Inicio</a>
+            <a href="/admin/pedidos" class="menu-link @GetActive("/admin/pedidos")"><span class="menu-icon">🛒</span> Pedidos</a>
+            <a href="/admin/gestionar-productos" class="menu-link @GetActive("/admin/gestionar-productos")"><span class="menu-icon">📦</span> Productos</a>
+            <a href="/admin/clientes" class="menu-link @GetActive("/admin/clientes")"><span class="menu-icon">👤</span> Clientes</a>
+            <a href="/admin/usuarios" class="menu-link @GetActive("/admin/usuarios")"><span class="menu-icon">👥</span> Usuarios</a>
+            <a href="/admin/despacho" class="menu-link @GetActive("/admin/despacho")"><span class="menu-icon">🚚</span> Despacho</a>
+            <a href="/admin/reportes" class="menu-link @GetActive("/admin/reportes")"><span class="menu-icon">📊</span> Reportes</a>
+            <a href="/admin/configuracion" class="menu-link @GetActive("/admin/configuracion")"><span class="menu-icon">⚙️</span> Configuración</a>
         </nav>
 
-        <button class="logout-btn" @onclick="CerrarSesion">Cerrar sesión</button>
+        <div class="sidebar-footer">
+            <div class="admin-card">
+                <div class="avatar-circle">AD</div>
+                <div class="admin-info">
+                    <strong>Administrador</strong>
+                    <small>admin@ferreapp.com</small>
+                </div>
+            </div>
+            <button class="btn-logout-premium" @onclick="CerrarSesion">Cerrar Sesión</button>
+        </div>
     </aside>
 
-    <main class="main-content">
-        <header class="topbar">
-            <div class="left-topbar">
-                <div class="menu-toggle">☰</div>
-                <input type="text" class="search-box" placeholder="Buscar usuarios..." />
-            </div>
-            <div class="right-topbar">
-                <div class="admin-user">
-                    <div class="avatar">👤</div>
-                    <div>
-                        <strong>Administrador</strong>
-                    </div>
-                </div>
+    <main class="ferreapp-main">
+        <header class="topbar-header">
+            <div class="header-titles">
+                <h1>Gestión de Personal 👥</h1>
+                <p>Control de acceso y roles de seguridad del sistema.</p>
             </div>
         </header>
 
-        <section class="page-header">
-            <div>
-                <h1>Gestión de Usuarios</h1>
-                <p>Crea, modifica o elimina cuentas de acceso al sistema</p>
-            </div>
-        </section>
-
-        @if (!string.IsNullOrEmpty(mensajeError))
+        @if (!string.IsNullOrEmpty(mensajeExito))
         {
-            <div style="background: #ffebee; color: #d32f2f; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #d32f2f; font-weight: bold;">
-                ⚠️ @mensajeError
-            </div>
+            <div class="alert-success-premium">✅ @mensajeExito</div>
         }
 
-        <section class="form-grid">
+        <div class="form-layout-grid">
             
-            <div class="left-column">
-                <div class="card">
-                    <h2>Registrar Nuevo Usuario</h2>
-                    <EditForm Model="nuevoUsuario" OnSubmit="GuardarUsuario">
-                        <div class="form-group" style="margin-bottom:15px;">
-                            <label>Nombre Completo *</label>
-                            <input type="text" @bind="nuevoUsuario.Nombre" required placeholder="Ej. Juan Pérez" />
+            <div class="form-col-left">
+                <div class="premium-card">
+                    <div class="card-header-flex" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; font-size: 18px; color: #0b1527;">Usuarios en el Sistema</h3>
+                        <div class="search-box">
+                            <input type="text" class="custom-input" placeholder="Buscar usuario..." @bind="terminoBusqueda" @bind:event="oninput" style="width: 250px;" />
                         </div>
-                        <div class="form-group" style="margin-bottom:15px;">
-                            <label>Correo Electrónico *</label>
-                            <input type="email" @bind="nuevoUsuario.Correo" required placeholder="Ej. jperez@ferreapp.com" />
-                        </div>
-                        <div class="form-group" style="margin-bottom:15px;">
-                            <label>Contraseña *</label>
-                            <input type="password" @bind="nuevoUsuario.Password" required placeholder="Mínimo 6 caracteres" />
-                        </div>
-                        <div class="form-group" style="margin-bottom:20px;">
-                            <label>Rol asignado *</label>
-                            <select @bind="nuevoUsuario.Rol" required>
-                                <option value="">Selecciona un rol</option>
-                                <option value="Admin">Administrador (Acceso total)</option>
-                                <option value="Cajero">Cajero (Solo ventas)</option>
-                                <option value="Almacen">Almacenista (Solo inventario)</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="save-btn" style="width: 100%; padding: 15px;">💾 Crear Cuenta</button>
-                    </EditForm>
-                </div>
-            </div>
+                    </div>
 
-            <div class="right-column" style="flex: 1.5;">
-                <div class="card">
-                    <h2>Usuarios en el Sistema</h2>
                     @if (usuarios == null)
                     {
-                        <p>⏳ Cargando lista de usuarios...</p>
-                    }
-                    else if (!usuarios.Any())
-                    {
-                        <p>No hay usuarios registrados aún.</p>
+                        <div class="loader-container"><div class="spinner"></div></div>
                     }
                     else
                     {
-                        <table style="width:100%; border-collapse: collapse; margin-top: 15px;">
+                        <table class="admin-table mt-3">
                             <thead>
-                                <tr style="background: #f4f6f8; text-align: left;">
-                                    <th style="padding: 12px;">Nombre</th>
-                                    <th style="padding: 12px;">Correo</th>
-                                    <th style="padding: 12px;">Rol</th>
-                                    <th style="padding: 12px;">Acciones</th>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Rol</th>
+                                    <th style="text-align: center;">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var u in usuarios)
+                                @foreach (var u in UsuariosFiltrados)
                                 {
-                                    <tr style="border-bottom: 1px solid #eee;">
-                                        <td style="padding: 12px;">@u.Nombre</td>
-                                        <td style="padding: 12px;">@u.Correo</td>
-                                        <td style="padding: 12px;">
-                                            <span style="background: @(u.Rol == "Admin" ? "#e3f2fd" : "#e8f5e9"); color: @(u.Rol == "Admin" ? "#0b3d91" : "#2e7d32"); padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 12px;">
-                                                @u.Rol
-                                            </span>
+                                    <tr>
+                                        <td>
+                                            <div class="user-cell">
+                                                <strong>@u.NombreCompleto</strong>
+                                                <small>@u.CorreoElectronico</small>
+                                            </div>
                                         </td>
-                                        <td style="padding: 12px;">
-                                            @if (u.Correo != "admin@ferreapp.com")
+                                        <td><span class="badge @u.Rol.ToLower()">@u.Rol</span></td>
+                                        <td style="text-align: center;">
+                                            @if (u.CorreoElectronico != "admin@ferreapp.com")
                                             {
-                                                <button @onclick="() => Eliminar(u.Id)" style="background: #ffebee; color: #d32f2f; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;">
-                                                    Eliminar
-                                                </button>
+                                                <button class="btn-icon-action delete" title="Eliminar" @onclick="() => Eliminar(u.Id)">🗑️</button>
                                             }
                                         </td>
                                     </tr>
@@ -141,99 +106,165 @@
                     }
                 </div>
             </div>
-        </section>
+
+            <div class="form-col-right">
+                <div class="premium-card">
+                    <h3 style="font-size: 18px; color: #0b1527; margin-bottom: 20px;">➕ Registrar Nuevo</h3>
+                    <EditForm Model="nuevoUsuario" OnValidSubmit="GuardarUsuario">
+                        <DataAnnotationsValidator />
+                        
+                        <div class="form-group mt-3">
+                            <label>Nombre Completo</label>
+                            <input type="text" @bind="nuevoUsuario.NombreCompleto" class="custom-input" placeholder="Nombre y Apellido" />
+                        </div>
+
+                        <div class="form-group mt-3">
+                            <label>Correo Electrónico</label>
+                            <input type="email" @bind="nuevoUsuario.CorreoElectronico" class="custom-input" placeholder="correo@ferreapp.com" />
+                        </div>
+
+                        <div class="form-group mt-3">
+                            <label>Contraseña</label>
+                            <input type="password" @bind="nuevoUsuario.Password" class="custom-input" />
+                        </div>
+
+                        <div class="form-group mt-3">
+                            <label>Asignar Rol</label>
+                            <select @bind="nuevoUsuario.Rol" class="custom-input">
+                                <option value="Cajero">Cajero</option>
+                                <option value="Admin">Administrador</option>
+                                <option value="Almacen">Almacenista</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn-primary mt-4 w-100">💾 Crear Cuenta</button>
+                    </EditForm>
+                </div>
+            </div>
+
+        </div>
     </main>
 </div>
 
 @code {
     private List<Usuario> usuarios;
-    private Usuario nuevoUsuario = new Usuario();
-    private string mensajeError = "";
+    private Usuario nuevoUsuario = new Usuario { Rol = "Cajero" };
+    private string mensajeExito = "";
+    private string terminoBusqueda = "";
 
-    protected override async Task OnInitializedAsync()
-    {
-        await CargarUsuarios();
-    }
+    protected override async Task OnInitializedAsync() => await CargarUsuarios();
+
+    private string GetActive(string path) => Navigation.Uri.Contains(path) ? "active" : "";
 
     private async Task CargarUsuarios()
     {
-        try
-        {
-            usuarios = await UsuarioService.ObtenerUsuariosAsync();
-        }
-        catch (Exception ex)
-        {
-            mensajeError = "Error al leer usuarios: " + ex.Message;
-        }
+        usuarios = await UsuarioService.ObtenerUsuariosAsync();
     }
+
+    private IEnumerable<Usuario> UsuariosFiltrados => 
+        string.IsNullOrEmpty(terminoBusqueda) ? usuarios : 
+        usuarios.Where(u => (u.NombreCompleto != null && u.NombreCompleto.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase)) || 
+                            (u.CorreoElectronico != null && u.CorreoElectronico.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase)));
 
     private async Task GuardarUsuario()
     {
         try
         {
-            mensajeError = "";
-
-            if (string.IsNullOrWhiteSpace(nuevoUsuario.Nombre) || string.IsNullOrWhiteSpace(nuevoUsuario.Correo))
-            {
-                mensajeError = "Todos los campos con asterisco (*) son obligatorios.";
-                return;
-            }
-
-            // Guardar en SQL Server
             await UsuarioService.CrearUsuarioAsync(nuevoUsuario);
-
-            // Reiniciar objeto y refrescar tabla
-            nuevoUsuario = new Usuario();
+            mensajeExito = "Usuario creado correctamente.";
+            nuevoUsuario = new Usuario { Rol = "Cajero" };
             await CargarUsuarios();
         }
-        catch (Exception ex)
-        {
-            mensajeError = "No se pudo crear el usuario: " + ex.Message;
-        }
+        catch (Exception ex) { mensajeExito = "Error: " + ex.Message; }
     }
 
     private async Task Eliminar(int id)
     {
-        try
-        {
-            await UsuarioService.EliminarUsuarioAsync(id);
-            await CargarUsuarios();
-        }
-        catch (Exception ex)
-        {
-            mensajeError = "No se pudo eliminar: " + ex.Message;
-        }
+        await UsuarioService.EliminarUsuarioAsync(id);
+        await CargarUsuarios();
+        mensajeExito = "Usuario eliminado.";
     }
 
-    private void CerrarSesion() => Navigation.NavigateTo("/");
+    private void CerrarSesion() { AuthService.CerrarSesion(); Navigation.NavigateTo("/"); }
 }
 
 <style>
-    /* Estilos coherentes con el diseño del dashboard */
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI"; }
-    body { background: #f7f9fc; }
-    .admin-layout { display: flex; min-height: 100vh; }
-    .sidebar { width: 280px; background: linear-gradient(to bottom, #03182d, #061f3b); color: white; padding: 30px 20px; display: flex; flex-direction: column; }
-    .logo { display: flex; gap: 15px; align-items: center; margin-bottom: 40px; }
-    .logo-icon { font-size: 28px; }
-    .logo h2 { font-size: 26px; }
-    .logo span { color: #f4b400; }
-    .menu { display: flex; flex-direction: column; gap: 10px; }
-    .menu-item { text-decoration: none; color: white; padding: 14px 18px; border-radius: 12px; transition: .3s; }
-    .menu-item:hover { background: rgba(255,255,255,.08); }
-    .menu-item.active { background: #0b3d91; }
-    .logout-btn { margin-top: auto; background: transparent; border: 1px solid rgba(255,255,255,.2); color: white; padding: 16px; border-radius: 12px; cursor: pointer; }
-    .main-content { flex: 1; padding: 30px; }
-    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 35px; }
-    .left-topbar { display: flex; align-items: center; gap: 20px; }
-    .search-box { width: 420px; padding: 14px 18px; border: 1px solid #ddd; border-radius: 12px; outline: none; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-    .page-header h1 { font-size: 34px; }
-    .form-grid { display: flex; gap: 25px; align-items: flex-start; }
-    .left-column { flex: 1; min-width: 350px; }
-    .card { background: white; border-radius: 18px; padding: 28px; box-shadow: 0 5px 20px rgba(0,0,0,.04); }
-    .card h2 { margin-bottom: 25px; color: #0d1b2a; font-size: 20px; }
-    .form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;}
-    input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; outline: none; }
-    .save-btn { background: #2f80ed; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
+    /* Estilos Globales heredados */
+    @((MarkupString)FerreAppLaVarilla.UI.Services.AdminTheme.EstilosGlobales)
+    
+    /* Layout general */
+    .ferreapp-admin-layout { display: flex; min-height: 100vh; background-color: #f4f7fe; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+    .ferreapp-sidebar { width: 280px; min-width: 280px; background-color: #0b1527; color: white; display: flex; flex-direction: column; padding: 30px 20px; position: sticky; top: 0; height: 100vh; }
+    .ferreapp-main { flex: 1; padding: 40px; overflow-y: auto; }
+
+    /* Sidebar Components */
+    .sidebar-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
+    .logo-icon-bg { background: #f59e0b; padding: 10px; border-radius: 12px; }
+    .logo-text h2 { font-size: 20px; color: white; margin: 0; font-weight: 800; }
+    .logo-text span { font-size: 10px; color: #f59e0b; letter-spacing: 2px; text-transform: uppercase; }
+
+    /* Menú con el borde activo unificado */
+    .sidebar-menu { display: flex; flex-direction: column; gap: 5px; flex-grow: 1; }
+    .menu-link { display: flex; align-items: center; gap: 15px; padding: 14px 20px; color: #94a3b8; text-decoration: none; border-radius: 14px; transition: 0.3s; position: relative; }
+    .menu-link:hover { color: white; background: rgba(255,255,255,0.05); }
+    .menu-link.active { background: rgba(245, 158, 11, 0.1); color: #f59e0b; font-weight: 700; }
+    .menu-link.active::before { content: ""; position: absolute; left: 0; width: 4px; height: 50%; background: #f59e0b; border-radius: 0 4px 4px 0; }
+
+    /* Perfil Admin y Botón */
+    .sidebar-footer { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 25px; margin-top: auto; }
+    .admin-card { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 16px; margin-bottom: 15px; display: flex; align-items: center; gap: 12px; }
+    .avatar-circle { width: 40px; height: 40px; background: #3b82f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: white; }
+    .admin-info strong { display: block; font-size: 13px; color: white; margin-bottom: 2px; }
+    .admin-info small { color: #94a3b8; font-size: 11px; }
+    
+    .btn-logout-premium { width: 100%; padding: 12px; background: transparent; border: 1px solid #334155; color: #94a3b8; border-radius: 12px; cursor: pointer; transition: 0.3s; font-weight: 600; }
+    .btn-logout-premium:hover { background: #ef4444; color: white; border-color: #ef4444; }
+
+    /* Cabecera del Main */
+    .topbar-header { margin-bottom: 30px; }
+    .header-titles h1 { font-size: 28px; font-weight: 800; color: #0f172a; margin-bottom: 5px; }
+    .header-titles p { color: #64748b; font-size: 15px; margin: 0; }
+    .alert-success-premium { background: #f0fdf4; border-left: 5px solid #16a34a; padding: 15px 20px; border-radius: 12px; color: #166534; font-weight: 600; margin-bottom: 25px; }
+
+    /* Cards y Layout del Formulario (AQUÍ ESTÁ LO QUE FALTÓ) */
+    .form-layout-grid { display: grid; grid-template-columns: 1.8fr 1fr; gap: 25px; }
+    .premium-card { background: white; border-radius: 24px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
+    
+    /* Inputs y Form elements */
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 8px; }
+    .custom-input { width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 12px; outline: none; background: #f8fafc; transition: 0.3s; font-size: 14px; color: #0f172a; }
+    .custom-input:focus { border-color: #f59e0b; background: white; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1); }
+    
+    .btn-primary { background: #0b1527; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 14px; }
+    .btn-primary:hover { background: #f59e0b; color: #0b1527; }
+    .w-100 { width: 100%; }
+    .mt-3 { margin-top: 15px; }
+    .mt-4 { margin-top: 25px; }
+
+    /* Tablas */
+    .admin-table { width: 100%; border-collapse: collapse; }
+    .admin-table th { text-align: left; padding: 15px; border-bottom: 2px solid #e2e8f0; color: #64748b; font-size: 12px; text-transform: uppercase; font-weight: 700; }
+    .admin-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    
+    .user-cell { display: flex; flex-direction: column; gap: 4px; }
+    .user-cell strong { color: #0f172a; font-size: 14px; }
+    .user-cell small { color: #64748b; font-size: 12px; }
+    
+    /* Badges de Roles */
+    .badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .badge.admin { background: #fee2e2; color: #991b1b; }
+    .badge.cajero { background: #dcfce7; color: #166534; }
+    .badge.almacen { background: #e0f2fe; color: #0369a1; }
+    .badge.cliente { background: #f1f5f9; color: #475569; }
+
+    /* Botones de Acción (Eliminar) */
+    .btn-icon-action { width: 35px; height: 35px; border-radius: 10px; border: none; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+    .btn-icon-action.delete { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; }
+    .btn-icon-action.delete:hover { background: #ef4444; color: white; }
+
+    /* Spinner */
+    .loader-container { display: flex; justify-content: center; padding: 40px; }
+    .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top: 4px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
+    @@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>

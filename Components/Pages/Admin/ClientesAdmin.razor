@@ -4,75 +4,294 @@
 @using Microsoft.EntityFrameworkCore
 @using FerreAppLaVarilla.UI.Data
 @using FerreAppLaVarilla.UI.Models
+@using FerreAppLaVarilla.UI.Services
+
 @attribute [Authorize(Roles = "Admin")]
 
 @inject ApplicationDbContext _context
+@inject NavigationManager _navigation
+@inject AutenticacionService AuthService
 
-<div class="admin-container">
-    <aside class="admin-sidebar">
-        <div class="sidebar-header">
-            <div class="logo-icon">⚡</div>
-            <div class="logo-text"><h2>FerreApp</h2><span>La Varilla</span></div>
+<PageTitle>Clientes - FerreApp La Varilla</PageTitle>
+
+@* --- MODAL DE DETALLES PREMIUM --- *@
+@if (mostrarModal && clienteSeleccionado != null)
+{
+    <div class="modal-overlay">
+        <div class="premium-modal bounce-in">
+            <div class="modal-header-flex">
+                <h3>Perfil del Cliente</h3>
+                <button class="btn-close-minimal" @onclick="CerrarModal">✕</button>
+            </div>
+            
+            <div class="modal-content text-center">
+                <div class="avatar-large">👤</div>
+                <h2 style="margin: 15px 0 5px 0; color: #0f172a;">@clienteSeleccionado.Nombre</h2>
+                <p style="color: #64748b; font-size: 14px;">@clienteSeleccionado.Email</p>
+                <span class="badge role">@clienteSeleccionado.Rol</span>
+
+                <div class="customer-stats mt-4">
+                    <div class="stat-box">
+                        <small>ID SISTEMA</small>
+                        <strong>#@clienteSeleccionado.Id.ToString().PadLeft(4, '0')</strong>
+                    </div>
+                    <div class="stat-box">
+                        <small>ESTADO</small>
+                        <strong style="color: #10b981;">Activo</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer-flex mt-4">
+                <button class="btn-action primary" style="width: 100%;" @onclick="CerrarModal">Cerrar Detalle</button>
+            </div>
         </div>
-        <nav class="sidebar-nav">
-            <a href="/panel-admin" class="nav-link"><span>🏠</span> Inicio</a>
-            <a href="/admin/pedidos" class="nav-link"><span>🛒</span> Pedidos</a>
-            <a href="/admin/gestionar-productos" class="nav-link"><span>📦</span> Productos</a>
-            <a href="/admin/clientes" class="nav-link active"><span>👤</span> Clientes</a>
-            <a href="/admin/configuracion" class="nav-link"><span>⚙️</span> Configuración</a>
+    </div>
+}
+
+<div class="ferreapp-admin-layout">
+    
+    <aside class="ferreapp-sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon-bg"><span style="font-size:20px;">⚡</span></div>
+            <div class="logo-text"><h2>FerreApp</h2><span>LA VARILLA</span></div>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <a href="/panel-admin" class="menu-link @GetActive("/panel-admin")"><span class="menu-icon">🏠</span> Inicio</a>
+            <a href="/admin/pedidos" class="menu-link @GetActive("/admin/pedidos")"><span class="menu-icon">🛒</span> Pedidos</a>
+            <a href="/admin/gestionar-productos" class="menu-link @GetActive("/admin/gestionar-productos")"><span class="menu-icon">📦</span> Productos</a>
+            <a href="/admin/clientes" class="menu-link @GetActive("/admin/clientes")"><span class="menu-icon">👤</span> Clientes</a>
+            <a href="/admin/usuarios" class="menu-link @GetActive("/admin/usuarios")"><span class="menu-icon">👥</span> Usuarios</a>
+            <a href="/admin/despacho" class="menu-link @GetActive("/admin/despacho")"><span class="menu-icon">🚚</span> Despacho</a>
+            <a href="/admin/reportes" class="menu-link @GetActive("/admin/reportes")"><span class="menu-icon">📊</span> Reportes</a>
+            <a href="/admin/configuracion" class="menu-link @GetActive("/admin/configuracion")"><span class="menu-icon">⚙️</span> Configuración</a>
         </nav>
+
+        <div class="sidebar-footer">
+            <div class="admin-card">
+                <div class="avatar-circle">AD</div>
+                <div class="admin-info">
+                    <strong>Administrador</strong>
+                    <small>admin@ferreapp.com</small>
+                </div>
+            </div>
+            <button class="btn-logout-premium" @onclick="CerrarSesion">Cerrar Sesión</button>
+        </div>
     </aside>
 
-    <main class="admin-main">
-        <header class="admin-topbar">
-            <div class="welcome-text">
+    <main class="ferreapp-main">
+        <header class="topbar-header">
+            <div class="header-titles">
                 <h1>Directorio de Clientes 👥</h1>
-                <p>Administra la base de datos de usuarios de tu ferretería.</p>
+                <p>Gestión de usuarios basada en la tabla Usuarios de SQL.</p>
             </div>
         </header>
 
-        <div class="data-card">
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Correo</th>
-                        <th>Rol</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var cliente in listaClientes)
-                    {
+        <div class="premium-card">
+            <div class="card-header-with-action">
+                <h3>Usuarios Registrados</h3>
+                <div class="search-box">
+                    <input type="text" class="custom-input" placeholder="Buscar por nombre o email..." @bind="terminoBusqueda" @bind:event="oninput" />
+                </div>
+            </div>
+
+            @if (listaClientes == null)
+            {
+                <div class="loader-container"><div class="spinner"></div></div>
+            }
+            else
+            {
+                <table class="admin-table mt-3">
+                    <thead>
                         <tr>
-                            <td><strong>@cliente.Nombre</strong></td>
-                            <td>@cliente.Correo</td>
-                            @* Comentamos Teléfono temporalmente si no existe en tu modelo Usuario *@
-                            @* <td>@cliente.Telefono</td> *@
-                            <td><span class="badge role">@cliente.Rol</span></td>
-                            <td>
-                                <button class="btn-icon-action edit">✏️</button>
-                                <button class="btn-icon-action delete">🗑️</button>
-                            </td>
+                            <th>ID</th>
+                            <th>Nombre Completo</th>
+                            <th>Email / Usuario</th>
+                            <th>Rol</th>
+                            <th style="text-align: center;">Acciones</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var cliente in ClientesFiltrados)
+                        {
+                            <tr>
+                                <td><strong>#@cliente.Id</strong></td>
+                                <td>@cliente.Nombre</td>
+                                <td style="color: #3b82f6;">@cliente.Email</td>
+                                <td><span class="badge role">@cliente.Rol</span></td>
+                                <td style="text-align: center;">
+                                    <button class="btn-icon-action view" title="Ver Perfil" @onclick="() => AbrirModal(cliente)">👁️</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                
+                @if (!ClientesFiltrados.Any())
+                {
+                    <div style="text-align: center; padding: 40px; color: #94a3b8;">
+                        No se encontraron clientes con esos datos.
+                    </div>
+                }
+            }
         </div>
     </main>
 </div>
 
 @code {
-    private List<Usuario> listaClientes = new();
+    public class ClienteView {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Rol { get; set; } = "";
+    }
+
+    private List<ClienteView>? listaClientes;
+    private string terminoBusqueda = "";
+    private bool mostrarModal = false;
+    private ClienteView? clienteSeleccionado;
 
     protected override async Task OnInitializedAsync()
     {
-        listaClientes = await _context.Usuarios
-            .Where(u => u.Rol == "Cliente")
-            .ToListAsync();
+        try 
+        {
+            listaClientes = await _context.Usuarios
+                .Where(u => u.Rol == "Cliente")
+                .Select(u => new ClienteView {
+                    Id = u.Id,
+                    Nombre = u.NombreCompleto ?? "Sin Nombre", 
+                    Email = u.CorreoElectronico ?? "Sin Email",
+                    Rol = u.Rol ?? "Cliente"
+                })
+                .OrderBy(u => u.Nombre)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error crítico en Clientes: {ex.Message}");
+            listaClientes = new List<ClienteView>();
+        }
+    }
+
+    private string GetActive(string path) => _navigation.Uri.Contains(path) ? "active" : "";
+
+    private IEnumerable<ClienteView> ClientesFiltrados =>
+        string.IsNullOrWhiteSpace(terminoBusqueda)
+            ? listaClientes ?? Enumerable.Empty<ClienteView>()
+            : listaClientes!.Where(c => 
+                (!string.IsNullOrEmpty(c.Nombre) && c.Nombre.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrEmpty(c.Email) && c.Email.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase)));
+
+    private void AbrirModal(ClienteView cliente)
+    {
+        clienteSeleccionado = cliente;
+        mostrarModal = true;
+    }
+
+    private void CerrarModal() => mostrarModal = false;
+
+    private void CerrarSesion()
+    {
+        AuthService.CerrarSesion();
+        _navigation.NavigateTo("/");
     }
 }
 
 <style>
+    /* Estilos Globales heredados */
     @((MarkupString)FerreAppLaVarilla.UI.Services.AdminTheme.EstilosGlobales)
+    
+    /* Layout general */
+    .ferreapp-admin-layout { display: flex; min-height: 100vh; background-color: #f4f7fe; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+    
+    /* SIDEBAR BLINDADO CON !IMPORTANT */
+    .ferreapp-sidebar { width: 280px !important; min-width: 280px !important; background-color: #0b1527 !important; color: white; display: flex; flex-direction: column; padding: 30px 20px; position: sticky; top: 0; height: 100vh; }
+    .ferreapp-main { flex: 1; padding: 40px; overflow-y: auto; }
+
+    .sidebar-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
+    .logo-icon-bg { background: #f59e0b; padding: 10px; border-radius: 12px; }
+    .logo-text h2 { font-size: 20px !important; color: white !important; margin: 0; font-weight: 800; line-height: 1; }
+    .logo-text span { font-size: 10px !important; color: #f59e0b !important; letter-spacing: 2px; text-transform: uppercase; }
+
+    .sidebar-menu { display: flex; flex-direction: column; gap: 5px; flex-grow: 1; }
+    .menu-link { display: flex; align-items: center; gap: 15px; padding: 14px 20px; color: #94a3b8 !important; text-decoration: none !important; border-radius: 14px; transition: 0.3s; position: relative; font-size: 15px !important; font-weight: 500 !important; }
+    .menu-link:hover { color: white !important; background: rgba(255,255,255,0.05); }
+    .menu-link.active { background: rgba(245, 158, 11, 0.1) !important; color: #f59e0b !important; font-weight: 700 !important; }
+    .menu-link.active::before { content: ""; position: absolute; left: 0; width: 4px; height: 50%; background: #f59e0b; border-radius: 0 4px 4px 0; }
+
+    .sidebar-footer { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 25px; margin-top: auto; }
+    .admin-card { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 16px; margin-bottom: 15px; display: flex; align-items: center; gap: 12px; }
+    .avatar-circle { width: 40px; height: 40px; background: #3b82f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: white; }
+    .admin-info strong { display: block; font-size: 14px !important; color: white; margin-bottom: 2px; }
+    .admin-info small { color: #94a3b8 !important; font-size: 12px !important; }
+    
+    /* BOTÓN CERRAR SESIÓN BLINDADO */
+    .btn-logout-premium { 
+        width: 100% !important; 
+        padding: 12px 15px !important; 
+        background: transparent !important; 
+        border: 1px solid rgba(255,255,255,0.2) !important; 
+        color: #94a3b8 !important; 
+        border-radius: 12px !important; 
+        cursor: pointer !important; 
+        transition: all 0.3s ease !important; 
+        font-weight: 600 !important; 
+        font-size: 14px !important; 
+        margin: 0 !important;
+        display: block !important;
+        text-align: center !important;
+    }
+    .btn-logout-premium:hover { 
+        background: #ef4444 !important; 
+        color: white !important; 
+        border-color: #ef4444 !important; 
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3) !important;
+    }
+
+    /* Cabecera del Main */
+    .topbar-header { margin-bottom: 30px; }
+    .header-titles h1 { font-size: 28px; font-weight: 800; color: #0f172a; margin-bottom: 5px; }
+    .header-titles p { color: #64748b; font-size: 15px; margin: 0; }
+
+    /* Clientes Styles */
+    .premium-card { background-color: white; border-radius: 24px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
+    .card-header-with-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .card-header-with-action h3 { margin: 0; font-size: 18px; color: #0b1527; font-weight: 700; }
+    
+    .admin-table { width: 100%; border-collapse: collapse; }
+    .admin-table th { text-align: left; padding: 15px; border-bottom: 2px solid #e2e8f0; color: #64748b; font-size: 12px; text-transform: uppercase; font-weight: 700; }
+    .admin-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #0f172a; vertical-align: middle; }
+    
+    .badge.role { background: #e0e7ff; color: #4338ca; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+    
+    .btn-icon-action { width: 35px; height: 35px; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+    .btn-icon-action.view:hover { background: #eff6ff; border-color: #3b82f6; }
+
+    /* MODAL STYLES */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 21, 39, 0.7); display: flex; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); }
+    .premium-modal { background: white; padding: 30px; border-radius: 24px; width: 400px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); }
+    .modal-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-header-flex h3 { margin: 0; font-size: 18px; color: #0b1527; font-weight: 700;}
+    .btn-close-minimal { background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b; transition: 0.2s; }
+    .btn-close-minimal:hover { color: #ef4444; }
+
+    .avatar-large { font-size: 50px; background: #f8fafc; width: 80px; height: 80px; margin: 0 auto; display: flex; justify-content: center; align-items: center; border-radius: 50%; border: 1px solid #e2e8f0; }
+    .customer-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; text-align: center; }
+    .stat-box small { display: block; color: #64748b; font-size: 10px; font-weight: 700; margin-bottom: 4px; }
+    
+    .btn-action.primary { background: #0b1527; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 14px; }
+    .btn-action.primary:hover { background: #f59e0b; color: #0b1527; }
+
+    .custom-input { padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 12px; outline: none; font-size: 14px; width: 280px; background: #f8fafc; transition: 0.3s; }
+    .custom-input:focus { border-color: #f59e0b; background: white; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1); }
+    
+    .mt-3 { margin-top: 15px; }
+    .mt-4 { margin-top: 25px; }
+
+    .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top: 4px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto; }
+    @@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .bounce-in { animation: bounceIn 0.3s ease-out; }
+    @@keyframes bounceIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 </style>

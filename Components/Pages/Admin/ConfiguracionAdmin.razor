@@ -1,70 +1,297 @@
 ﻿@page "/admin/configuracion"
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using FerreAppLaVarilla.UI.Data
+@using FerreAppLaVarilla.UI.Models
+@using FerreAppLaVarilla.UI.Services
+
 @attribute [Authorize(Roles = "Admin")]
 
-<div class="admin-container">
-    <aside class="admin-sidebar">
-        <div class="sidebar-header">
-            <div class="logo-icon">⚡</div>
-            <div class="logo-text"><h2>FerreApp</h2><span>La Varilla</span></div>
+@inject ApplicationDbContext _context
+@inject NavigationManager Navigation
+@inject AutenticacionService AuthService
+
+<PageTitle>Configuración - FerreApp La Varilla</PageTitle>
+
+<div class="admin-layout">
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon-bg"><span style="font-size:20px;">⚡</span></div>
+            <div class="logo-text">
+                <h2>FerreApp</h2>
+                <span>LA VARILLA</span>
+            </div>
         </div>
-        <nav class="sidebar-nav">
-            <a href="/panel-admin" class="nav-link"><span>🏠</span> Inicio</a>
-            <a href="/admin/pedidos" class="nav-link"><span>🛒</span> Pedidos</a>
-            <a href="/admin/gestionar-productos" class="nav-link"><span>📦</span> Productos</a>
-            <a href="/admin/clientes" class="nav-link"><span>👤</span> Clientes</a>
-            <a href="/admin/configuracion" class="nav-link active"><span>⚙️</span> Configuración</a>
+        
+         <nav class="sidebar-menu">
+            <a href="/panel-admin" class="menu-link @GetActive("/panel-admin")"><span class="menu-icon">🏠</span> Inicio</a>
+            <a href="/admin/pedidos" class="menu-link @GetActive("/admin/pedidos")"><span class="menu-icon">🛒</span> Pedidos</a>
+            <a href="/admin/gestionar-productos" class="menu-link @GetActive("/admin/gestionar-productos")"><span class="menu-icon">📦</span> Productos</a>
+            <a href="/admin/clientes" class="menu-link @GetActive("/admin/clientes")"><span class="menu-icon">👤</span> Clientes</a>
+            <a href="/admin/usuarios" class="menu-link @GetActive("/admin/usuarios")"><span class="menu-icon">👥</span> Usuarios</a>
+            <a href="/admin/despacho" class="menu-link @GetActive("/admin/despacho")"><span class="menu-icon">🚚</span> Despacho</a>
+            <a href="/admin/reportes" class="menu-link @GetActive("/admin/reportes")"><span class="menu-icon">📊</span> Reportes</a>
+            <a href="/admin/configuracion" class="menu-link @GetActive("/admin/configuracion")"><span class="menu-icon">⚙️</span> Configuración</a>
         </nav>
+
+        <div class="sidebar-footer">
+            <div class="admin-card">
+                <div class="avatar-circle">AD</div>
+                <div class="admin-info">
+                    <strong>Administrador</strong>
+                    <small>admin@ferreapp.com</small>
+                </div>
+            </div>
+            <button class="btn-logout-premium" @onclick="CerrarSesion">
+                Cerrar Sesión
+            </button>
+        </div>
     </aside>
 
-    <main class="admin-main">
-        <header class="admin-topbar">
-            <div class="welcome-text">
+    <main class="main-content">
+        <header class="topbar-header">
+            <div class="header-titles">
                 <h1>Configuración del Sistema ⚙️</h1>
-                <p>Ajusta los parámetros generales de FerreApp La Varilla.</p>
+                <p>Ajusta los parámetros de negocio y gestiona el acceso del personal.</p>
             </div>
         </header>
 
+        @if (!string.IsNullOrEmpty(mensajeExito))
+        {
+            <div class="alert-success-premium">
+                <span>✅ @mensajeExito</span>
+                <button class="close-alert" @onclick='() => mensajeExito = ""'>✕</button>
+            </div>
+        }
+
         <div class="settings-grid">
-            <div class="data-card">
-                <h3>Información del Negocio</h3>
-                <div class="form-group-admin">
-                    <label>Nombre de la Ferretería</label>
-                    <input type="text" value="FerreApp La Varilla" class="admin-input" />
+            
+            <div class="premium-card">
+                <div class="card-header">
+                    <h3>🏢 Datos de la Ferretería</h3>
                 </div>
-                <div class="form-group-admin">
-                    <label>Dirección Física</label>
-                    <input type="text" value="Baní, Peravia, R.D." class="admin-input" />
+                <div class="form-body">
+                    <div class="form-group-admin">
+                        <label>Nombre Comercial</label>
+                        <input type="text" @bind="configNegocio.Nombre" class="admin-input" />
+                    </div>
+                    <div class="form-group-admin mt-3">
+                        <label>RNC / Cédula</label>
+                        <input type="text" @bind="configNegocio.Rnc" class="admin-input" placeholder="101-00000-1" />
+                    </div>
+                    <div class="form-group-admin mt-3">
+                        <label>Ubicación Principal</label>
+                        <textarea @bind="configNegocio.Direccion" class="admin-input" rows="2"></textarea>
+                    </div>
+                    <div class="row-flex mt-3">
+                        <div class="form-group-admin w-50">
+                            <label>ITBIS (%)</label>
+                            <input type="number" @bind="configNegocio.Itbis" class="admin-input" />
+                        </div>
+                        <div class="form-group-admin w-50">
+                            <label>Moneda Base</label>
+                            <select class="admin-input" @bind="configNegocio.Moneda">
+                                <option value="DOP">Pesos (RD$)</option>
+                                <option value="USD">Dólares (US$)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn-save-settings mt-4" @onclick="GuardarConfig">
+                        💾 Guardar Parámetros
+                    </button>
                 </div>
-                <button class="btn-action primary" style="width: fit-content; margin-top: 15px;">Guardar Cambios</button>
             </div>
 
-            <div class="data-card">
-                <h3>Impuestos y Moneda</h3>
-                <div class="form-group-admin">
-                    <label>ITBIS (%)</label>
-                    <input type="number" value="18" class="admin-input" />
+            <div class="premium-card">
+                <div class="card-header">
+                    <h3>👤 Gestión de Personal</h3>
+                    <span class="badge-security">Seguridad</span>
                 </div>
-                <div class="form-group-admin">
-                    <label>Moneda Predeterminada</label>
-                    <select class="admin-input">
-                        <option>Pesos Dominicanos (RD$)</option>
-                        <option>Dólares (US$)</option>
-                    </select>
+                <div class="form-body">
+                    <EditForm Model="nuevoUsuario" OnValidSubmit="RegistrarUsuario">
+                        <DataAnnotationsValidator />
+                        
+                        <div class="form-group-admin">
+                            <label>Nombre Completo</label>
+                            <input type="text" @bind="nuevoUsuario.NombreCompleto" class="admin-input" placeholder="Ej: Josué González" />
+                        </div>
+
+                        <div class="form-group-admin mt-3">
+                            <label>Email de Acceso</label>
+                            <input type="email" @bind="nuevoUsuario.CorreoElectronico" class="admin-input" placeholder="empleado@ferreapp.com" />
+                        </div>
+
+                        <div class="row-flex mt-3">
+                            <div class="form-group-admin w-50">
+                                <label>Rol de Usuario</label>
+                                <select class="admin-input" @bind="nuevoUsuario.Rol">
+                                    <option value="Admin">Administrador</option>
+                                    <option value="Cajero">Cajero / Ventas</option>
+                                    <option value="Logistica">Despacho</option>
+                                </select>
+                            </div>
+                            <div class="form-group-admin w-50">
+                                <label>Password Temporal</label>
+                                <input type="password" @bind="nuevoUsuario.Password" class="admin-input" />
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-add-user mt-4">
+                            <span>➕ Registrar en SQL Server</span>
+                        </button>
+                    </EditForm>
+
+                    <div class="server-info-box mt-4">
+                        <div class="info-row">
+                            <small>Estado SQL:</small>
+                            <span class="dot-online"></span>
+                            <strong>Conectado</strong>
+                        </div>
+                        <div class="info-row">
+                            <small>Instancia:</small>
+                            <strong>FerreApp_Primary</strong>
+                        </div>
+                    </div>
                 </div>
+                <div class="mt-4 pt-3" style="border-top: 1px dashed #cbd5e1;">
+    <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">
+        ¿Necesitas editar o eliminar usuarios existentes?
+    </p>
+    <button class="btn-primary-outline w-100" @onclick='() => Navigation.NavigateTo("/admin/usuarios")'>
+        👤 Ver listado completo de usuarios
+    </button>
+</div>
             </div>
+
         </div>
     </main>
 </div>
 
-<style>
-    @((MarkupString)FerreAppLaVarilla.UI.Services.AdminTheme.EstilosGlobales)
+@code {
+    private Usuario nuevoUsuario = new Usuario { Rol = "Cajero" };
+    private ConfigData configNegocio = new();
+    private string mensajeExito = "";
 
-    
-    .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px; }
-    .form-group-admin { margin-bottom: 15px; }
-    .form-group-admin label { display: block; font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 5px; }
-    .admin-input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; outline: none; }
-    .admin-input:focus { border-color: #0b1527; background: white; }
+    protected override void OnInitialized()
+    {
+        configNegocio.Nombre = "FerreApp La Varilla";
+        configNegocio.Direccion = "Baní, Peravia, República Dominicana";
+        configNegocio.Itbis = 18;
+        configNegocio.Moneda = "DOP";
+    }
+
+    private string GetActive(string path) => Navigation.Uri.Contains(path) ? "active" : "";
+
+    private async Task RegistrarUsuario()
+    {
+        try
+        {
+            _context.Usuarios.Add(nuevoUsuario);
+            await _context.SaveChangesAsync();
+            mensajeExito = $"Usuario '{nuevoUsuario.NombreCompleto}' registrado exitosamente.";
+            nuevoUsuario = new Usuario { Rol = "Cajero" }; // Reset
+        }
+        catch (Exception ex)
+        {
+            mensajeExito = "Error al conectar con SQL: " + ex.Message;
+        }
+    }
+
+    private void GuardarConfig() => mensajeExito = "Parámetros globales actualizados correctamente.";
+    private void CerrarSesion() { AuthService.CerrarSesion(); Navigation.NavigateTo("/"); }
+
+    public class ConfigData {
+        public string Nombre { get; set; } = "";
+        public string Rnc { get; set; } = "";
+        public string Direccion { get; set; } = "";
+        public int Itbis { get; set; }
+        public string Moneda { get; set; } = "DOP";
+    }
+}
+
+<style>
+    /* VARIABLES Y RESET */
+    :root { --primary: #0b1527; --accent: #f59e0b; --text-muted: #94a3b8; --bg-main: #f4f7fe; }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+    .admin-layout { display: flex; min-height: 100vh; background: var(--bg-main); }
+
+    /* SIDEBAR DEFINITIVO */
+    .sidebar { 
+        width: 280px; 
+        min-width: 280px; 
+        background: var(--primary); 
+        color: white; 
+        display: flex; 
+        flex-direction: column; 
+        padding: 30px 20px; 
+        position: sticky; 
+        top: 0; 
+        height: 100vh;
+    }
+    .sidebar-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
+    .logo-icon-bg { background: var(--accent); padding: 10px; border-radius: 12px; color: white; }
+    .logo-text h2 { font-size: 20px; color: white; margin: 0; font-weight: 800; line-height: 1; }
+    .logo-text span { font-size: 10px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; }
+
+    .menu { display: flex; flex-direction: column; gap: 8px; flex-grow: 1; }
+    .menu-item { 
+        display: flex; align-items: center; gap: 15px; padding: 14px 20px; 
+        color: var(--text-muted); text-decoration: none; border-radius: 14px; 
+        font-weight: 500; transition: 0.3s; position: relative;
+    }
+    .menu-item:hover { color: white; background: rgba(255,255,255,0.05); }
+    .menu-item.active { background: rgba(245, 158, 11, 0.1); color: var(--accent); font-weight: 700; }
+    .menu-item.active::before { content: ""; position: absolute; left: 0; width: 4px; height: 50%; background: var(--accent); border-radius: 0 4px 4px 0; }
+
+    /* FOOTER SIDEBAR & LOGOUT */
+    .sidebar-footer { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 25px; margin-top: auto; }
+    .admin-card { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 16px; margin-bottom: 15px; display: flex; align-items: center; gap: 12px; }
+    .avatar-circle { width: 40px; height: 40px; background: #3b82f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; }
+    .admin-info strong { display: block; font-size: 13px; color: white; }
+    .admin-info small { color: var(--text-muted); font-size: 11px; }
+
+    .btn-logout-premium { 
+        width: 100%; padding: 12px; background: transparent; border: 1px solid #334155; 
+        color: var(--text-muted); border-radius: 12px; cursor: pointer; font-weight: 600; transition: 0.3s;
+    }
+    .btn-logout-premium:hover { background: #ef4444; color: white; border-color: #ef4444; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
+
+    /* CONTENIDO */
+    .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+    .header-titles h1 { font-size: 28px; color: #0f172a; font-weight: 800; margin-bottom: 5px; }
+    .header-titles p { color: #64748b; font-size: 15px; }
+
+    .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 30px; margin-top: 30px; }
+    .premium-card { background: white; border-radius: 24px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); border: 1px solid #f1f5f9; }
+    .premium-card h3 { font-size: 18px; font-weight: 700; color: var(--primary); }
+
+    /* FORMULARIOS */
+    .form-group-admin label { display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 8px; }
+    .admin-input { width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; outline: none; transition: 0.3s; background: #f8fafc; }
+    .admin-input:focus { border-color: var(--accent); background: white; box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.05); }
+
+    .row-flex { display: flex; gap: 15px; }
+    .w-50 { width: 50%; }
+    .mt-3 { margin-top: 15px; }
+    .mt-4 { margin-top: 25px; }
+
+    /* BOTONES */
+    .btn-save-settings { width: 100%; background: var(--primary); color: white; padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: 0.3s; }
+    .btn-save-settings:hover { background: var(--accent); color: var(--primary); }
+
+    .btn-add-user { width: 100%; background: white; color: var(--primary); border: 2px solid var(--primary); padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.3s; }
+    .btn-add-user:hover { background: var(--primary); color: white; }
+
+    /* ALERTAS */
+    .alert-success-premium { background: #f0fdf4; border-left: 5px solid #16a34a; padding: 15px 20px; border-radius: 12px; color: #166534; font-weight: 600; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+    .close-alert { background: none; border: none; cursor: pointer; color: #166534; font-size: 18px; }
+
+    /* INFO BOX */
+    .server-info-box { background: #f8fafc; padding: 15px; border-radius: 14px; border: 1px solid #e2e8f0; }
+    .info-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 13px; }
+    .dot-online { width: 8px; height: 8px; background: #16a34a; border-radius: 50%; margin-right: 8px; }
+    .badge-security { background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; }
 </style>

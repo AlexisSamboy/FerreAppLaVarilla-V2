@@ -144,7 +144,7 @@
         await Task.Delay(1000); 
 
         var usuario = DbContext.Usuarios.FirstOrDefault(
-            u => u.Correo == correo && u.Password == clave
+            u => u.CorreoElectronico == correo && u.Password == clave
         );
 
         if (usuario != null)

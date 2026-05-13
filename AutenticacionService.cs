@@ -25,9 +25,9 @@ namespace FerreAppLaVarilla.UI.Services
             var claims = new List<Claim>
             {
                 // IMPORTANTE:
-                // Aquí usamos Correo porque en tu modelo Usuario
+                // Aquí usamos NombreCompleto porque en tu modelo Usuario
                 // probablemente no existe la propiedad Nombre
-                new Claim(ClaimTypes.Name, usuario.Nombre),
+                new Claim(ClaimTypes.Name, usuario.NombreCompleto ?? ""),
 
                 // Si Rol puede venir null, protegemos con ?? ""
                 new Claim(ClaimTypes.Role, usuario.Rol ?? "")
