@@ -5,26 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
     <ResourcePreloader />
+    
+    @* Estilos manejados por el Asset Manager *@
     <link rel="stylesheet" href="@Assets["lib/bootstrap/dist/css/bootstrap.min.css"]" />
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["FerreAppLaVarilla.UI.styles.css"]" />
-    <link rel="stylesheet" href="css/site.css" />
-    <link rel="stylesheet" href="css/home.css" />
-    <link rel="stylesheet" href="css/admin.css" />
-    <link rel="stylesheet" href="css/productos.css" />
-    <link rel="stylesheet" href="css/carrito.css" />
-    <link rel="stylesheet" href="css/productos.css" />
+
+    @* Estilos manuales - IMPORTANTE: Todos deben empezar con "/" *@
+    <link rel="stylesheet" href="/css/site.css" />
+    <link rel="stylesheet" href="/css/home.css" />
+    <link rel="stylesheet" href="/css/admin.css" />
+    <link rel="stylesheet" href="/css/productos.css" />
+    <link rel="stylesheet" href="/css/carrito.css" />
+    <link rel="stylesheet" href="/css/EstilosGlobalesAdmin.css" />
+
+    
     <ImportMap />
     <link rel="icon" type="image/png" href="favicon.png" />
+    
+    @* Scripts de Terceros *@
     <script src="_content/Blazor-ApexCharts/js/apex-charts.js"></script>
+    
     <script>
         window.descargarArchivo = function (nombreArchivo, contenidoBase64) {
-        const link = document.createElement('a');
-        link.download = nombreArchivo;
-        link.href = "data:text/csv;base64," + contenidoBase64;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+            const link = document.createElement('a');
+            link.download = nombreArchivo;
+            link.href = "data:text/csv;base64," + contenidoBase64;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
     </script>
     
@@ -35,30 +44,27 @@
     
     <ReconnectModal />
     <script src="@Assets["_framework/blazor.web.js"]"></script>
+    
     <script>
         window.downloadFile = function (fileName, base64String) {
-        const link = document.createElement('a');
-        link.download = fileName;
-        link.href = 'data:application/pdf;base64,' + base64String;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = 'data:application/pdf;base64,' + base64String;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
-    </script>
-    <script>
+
         window.abrirPdfEnPestana = function (base64) {
-        // Convertir el base64 a un arreglo de bytes
-        const byteCharacters = atob(base64);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        
-        // Crear un Blob tipo PDF y abrirlo en una nueva pestaña
-        const blob = new Blob([byteArray], { type: 'application/pdf' });
-        const blobUrl = URL.createObjectURL(blob);
-        window.open(blobUrl, '_blank');
+            const byteCharacters = atob(base64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'application/pdf' });
+            const blobUrl = URL.createObjectURL(blob);
+            window.open(blobUrl, '_blank');
         };
     </script>
 </body>

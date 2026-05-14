@@ -1,0 +1,88 @@
+﻿/* --- RESET Y VARIABLES --- */
+:root {
+    --ferre-navy: #03182d;
+    --ferre-gold: #f4b400;
+    --ferre-bg: #f1f5f9;
+    --ferre-white: #ffffff;
+    --sidebar-width: 260px;
+}
+
+.admin-wrapper {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--ferre-bg);
+}
+
+/* --- SIDEBAR REFORZADO --- */
+.ferre-sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--ferre-navy);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    position: fixed; /* Se queda fijo al desplazar */
+    height: 100vh;
+}
+
+.ferre-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 30px;
+    padding: 10px;
+}
+
+/* MENÚ VERTICAL REAL */
+.ferre-menu-list {
+    display: flex;
+    flex-direction: column; /* Esto obliga a que sea uno debajo de otro */
+    gap: 8px;
+    flex-grow: 1;
+}
+
+.ferre-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    color: #cbd5e1;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: 0.3s;
+}
+
+    .ferre-nav-link:hover {
+        background-color: rgba(255,255,255,0.1);
+        color: var(--ferre-gold);
+    }
+
+    .ferre-nav-link.active {
+        background-color: #2563eb;
+        color: white;
+    }
+
+.ferre-logout-section {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 20px;
+}
+
+/* --- CONTENIDO PRINCIPAL --- */
+.ferre-main {
+    margin-left: var(--sidebar-width); /* Deja espacio para el sidebar fijo */
+    flex: 1;
+    padding: 30px;
+}
+
+.ferre-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.ferre-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}

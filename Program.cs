@@ -63,6 +63,7 @@ app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages:
 app.UseHttpsRedirection();
 app.UseAntiforgery();
 app.MapStaticAssets();
+app.UseStaticFiles();
 
 // ¡ESTO ES CRÍTICO! El orden debe ser exactamente este:
 app.UseAuthentication(); // 1. Verifica la identidad del usuario
