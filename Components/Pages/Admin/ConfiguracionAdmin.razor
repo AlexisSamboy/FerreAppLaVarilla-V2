@@ -16,47 +16,66 @@
 
 <div class="admin-layout">
 
-    <aside class="sidebar">
-        <div class="sidebar-logo">
-            <div class="logo-icon-bg"><span style="font-size:20px;">⚡</span></div>
-            <div class="logo-text">
-                <h2>FerreApp</h2>
-                <span>LA VARILLA</span>
+    <aside class="sidebar @(menuOculto ? "oculto" : "")">
+        <div class="logo">
+            <div class="logo-icon">⚡</div>
+            <div>
+                <h2>FerreApp<span>LaVarilla</span></h2>
             </div>
         </div>
         
-         <nav class="sidebar-menu">
-            <a href="/panel-admin" class="menu-link @GetActive("/panel-admin")"><span class="menu-icon">🏠</span> Inicio</a>
-            <a href="/admin/pedidos" class="menu-link @GetActive("/admin/pedidos")"><span class="menu-icon">🛒</span> Pedidos</a>
-            <a href="/admin/gestionar-productos" class="menu-link @GetActive("/admin/gestionar-productos")"><span class="menu-icon">📦</span> Productos</a>
-            <a href="/admin/clientes" class="menu-link @GetActive("/admin/clientes")"><span class="menu-icon">👤</span> Clientes</a>
-            <a href="/admin/usuarios" class="menu-link @GetActive("/admin/usuarios")"><span class="menu-icon">👥</span> Usuarios</a>
-            <a href="/admin/despacho" class="menu-link @GetActive("/admin/despacho")"><span class="menu-icon">🚚</span> Despacho</a>
-            <a href="/admin/reportes" class="menu-link @GetActive("/admin/reportes")"><span class="menu-icon">📊</span> Reportes</a>
-            <a href="/admin/configuracion" class="menu-link @GetActive("/admin/configuracion")"><span class="menu-icon">⚙️</span> Configuración</a>
+        <nav class="menu">
+            <NavLink class="menu-item" href="/panel-admin" Match="NavLinkMatch.All">
+                <span class="menu-icon">📊</span> Dashboard
+            </NavLink>
+            <NavLink class="menu-item" href="/admin/pedidos">
+                <span class="menu-icon">🛒</span> Pedidos
+            </NavLink>
+            <NavLink class="menu-item" href="/admin/gestionar-productos">
+                <span class="menu-icon">📦</span> Productos
+            </NavLink>
+            <NavLink class="menu-item" href="/admin/clientes">
+                <span class="menu-icon">👥</span> Clientes
+            </NavLink>
+            <NavLink class="menu-item" href="/admin/usuarios">
+                <span class="menu-icon">👤</span> Usuarios
+            </NavLink>
+            <NavLink class="menu-item" href="/admin/despacho">
+                <span class="menu-icon">🚚</span> Despacho
+            </NavLink>
+            <NavLink class="menu-item" href="/admin/configuracion">
+                <span class="menu-icon">⚙️</span> Configuración
+            </NavLink>
         </nav>
 
-        <div class="sidebar-footer">
-            <div class="admin-card">
-                <div class="avatar-circle">AD</div>
-                <div class="admin-info">
-                    <strong>Administrador</strong>
-                    <small>admin@ferreapp.com</small>
-                </div>
-            </div>
-            <button class="btn-logout-premium" @onclick="CerrarSesion">
-                Cerrar Sesión
-            </button>
-        </div>
+        <button class="logout-btn" @onclick="CerrarSesion">
+            Cerrar Sesión
+        </button>
     </aside>
 
     <main class="main-content">
-        <header class="topbar-header">
-            <div class="header-titles">
-                <h1>Configuración del Sistema ⚙️</h1>
-                <p>Ajusta los parámetros de negocio y gestiona el acceso del personal.</p>
+        <header class="topbar">
+            <div class="left-topbar">
+                <div class="menu-toggle" @onclick="ToggleMenu">☰</div>
+                <input type="text" placeholder="Buscar en el sistema..." class="search-box" />
+            </div>
+
+            <div class="right-topbar">
+                <span class="notification">🔔</span>
+                <div class="admin-user">
+                    <div class="avatar">👤</div>
+                    <div>
+                        <strong>Administrador</strong>
+                        <p style="margin: 0; font-size: 13px; color: #64748b;">admin@ferreapp.com</p>
+                    </div>
+                </div>
             </div>
         </header>
+
+        <div class="header-titles" style="margin-bottom: 30px;">
+            <h1 style="font-size: 28px; color: #0f172a; font-weight: 800; margin-bottom: 5px;">Configuración del Sistema ⚙️</h1>
+            <p style="color: #64748b; font-size: 15px; margin: 0;">Ajusta los parámetros de negocio y gestiona el acceso del personal.</p>
+        </div>
 
         @if (!string.IsNullOrEmpty(mensajeExito))
         {
@@ -69,7 +88,7 @@
         <div class="settings-grid">
             
             <div class="premium-card">
-                <div class="card-header">
+                <div class="card-header" style="margin-bottom: 20px;">
                     <h3>🏢 Datos de la Ferretería</h3>
                 </div>
                 <div class="form-body">
@@ -105,7 +124,7 @@
             </div>
 
             <div class="premium-card">
-                <div class="card-header">
+                <div class="card-header" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
                     <h3>👤 Gestión de Personal</h3>
                     <span class="badge-security">Seguridad</span>
                 </div>
@@ -145,24 +164,24 @@
 
                     <div class="server-info-box mt-4">
                         <div class="info-row">
-                            <small>Estado SQL:</small>
+                            <small style="color: #64748b;">Estado SQL:</small>
                             <span class="dot-online"></span>
                             <strong>Conectado</strong>
                         </div>
-                        <div class="info-row">
-                            <small>Instancia:</small>
+                        <div class="info-row" style="margin-top: 5px;">
+                            <small style="color: #64748b;">Instancia:</small>
                             <strong>FerreApp_Primary</strong>
                         </div>
                     </div>
                 </div>
                 <div class="mt-4 pt-3" style="border-top: 1px dashed #cbd5e1;">
-    <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">
-        ¿Necesitas editar o eliminar usuarios existentes?
-    </p>
-    <button class="btn-primary-outline w-100" @onclick='() => Navigation.NavigateTo("/admin/usuarios")'>
-        👤 Ver listado completo de usuarios
-    </button>
-</div>
+                    <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">
+                        ¿Necesitas editar o eliminar usuarios existentes?
+                    </p>
+                    <button class="btn-primary-outline w-100" style="padding: 12px; border: 1px solid #0b1527; background: transparent; color: #0b1527; border-radius: 12px; font-weight: 600; cursor: pointer;" @onclick='() => Navigation.NavigateTo("/admin/usuarios")'>
+                        👤 Ver listado completo de usuarios
+                    </button>
+                </div>
             </div>
 
         </div>
@@ -170,6 +189,9 @@
 </div>
 
 @code {
+    private bool menuOculto = true;
+    private void ToggleMenu() => menuOculto = !menuOculto;
+
     private Usuario nuevoUsuario = new Usuario { Rol = "Cajero" };
     private ConfigData configNegocio = new();
     private string mensajeExito = "";
@@ -182,8 +204,6 @@
         configNegocio.Moneda = "DOP";
     }
 
-    private string GetActive(string path) => Navigation.Uri.Contains(path) ? "active" : "";
-
     private async Task RegistrarUsuario()
     {
         try
@@ -191,7 +211,7 @@
             _context.Usuarios.Add(nuevoUsuario);
             await _context.SaveChangesAsync();
             mensajeExito = $"Usuario '{nuevoUsuario.NombreCompleto}' registrado exitosamente.";
-            nuevoUsuario = new Usuario { Rol = "Cajero" }; // Reset
+            nuevoUsuario = new Usuario { Rol = "Cajero" };
         }
         catch (Exception ex)
         {
@@ -212,86 +232,55 @@
 }
 
 <style>
-    /* VARIABLES Y RESET */
-    :root { --primary: #0b1527; --accent: #f59e0b; --text-muted: #94a3b8; --bg-main: #f4f7fe; }
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+    /* =========================================
+       ESTILOS DEL TOPBAR Y CONTENEDOR PRINCIPAL
+       ========================================= */
+    .main-content { flex: 1; padding: 25px 35px; background: #fafbfd; overflow-y: auto; transition: width 0.4s; }
+    
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+    .left-topbar { display: flex; align-items: center; gap: 20px; }
+    .menu-toggle { font-size: 24px; cursor: pointer; color: #0d1b2a; padding: 5px; border-radius: 8px; transition: 0.2s; }
+    .menu-toggle:hover { background: #e2e8f0; }
+    .search-box { width: 350px; padding: 10px 16px; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; background: white; font-size: 13px; }
+    
+    .right-topbar { display: flex; align-items: center; gap: 20px; }
+    .notification { font-size: 20px; cursor: pointer; }
+    .admin-user { display: flex; align-items: center; gap: 12px; }
+    .admin-user strong { color: #0d1b2a; display: block; font-size: 14px; }
+    .avatar { width: 40px; height: 40px; background: #e2e8f0; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 16px; }
 
-    .admin-layout { display: flex; min-height: 100vh; background: var(--bg-main); }
-
-    /* SIDEBAR DEFINITIVO */
-    .sidebar { 
-        width: 280px; 
-        min-width: 280px; 
-        background: var(--primary); 
-        color: white; 
-        display: flex; 
-        flex-direction: column; 
-        padding: 30px 20px; 
-        position: sticky; 
-        top: 0; 
-        height: 100vh;
-    }
-    .sidebar-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
-    .logo-icon-bg { background: var(--accent); padding: 10px; border-radius: 12px; color: white; }
-    .logo-text h2 { font-size: 20px; color: white; margin: 0; font-weight: 800; line-height: 1; }
-    .logo-text span { font-size: 10px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; }
-
-    .menu { display: flex; flex-direction: column; gap: 8px; flex-grow: 1; }
-    .menu-item { 
-        display: flex; align-items: center; gap: 15px; padding: 14px 20px; 
-        color: var(--text-muted); text-decoration: none; border-radius: 14px; 
-        font-weight: 500; transition: 0.3s; position: relative;
-    }
-    .menu-item:hover { color: white; background: rgba(255,255,255,0.05); }
-    .menu-item.active { background: rgba(245, 158, 11, 0.1); color: var(--accent); font-weight: 700; }
-    .menu-item.active::before { content: ""; position: absolute; left: 0; width: 4px; height: 50%; background: var(--accent); border-radius: 0 4px 4px 0; }
-
-    /* FOOTER SIDEBAR & LOGOUT */
-    .sidebar-footer { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 25px; margin-top: auto; }
-    .admin-card { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 16px; margin-bottom: 15px; display: flex; align-items: center; gap: 12px; }
-    .avatar-circle { width: 40px; height: 40px; background: #3b82f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; }
-    .admin-info strong { display: block; font-size: 13px; color: white; }
-    .admin-info small { color: var(--text-muted); font-size: 11px; }
-
-    .btn-logout-premium { 
-        width: 100%; padding: 12px; background: transparent; border: 1px solid #334155; 
-        color: var(--text-muted); border-radius: 12px; cursor: pointer; font-weight: 600; transition: 0.3s;
-    }
-    .btn-logout-premium:hover { background: #ef4444; color: white; border-color: #ef4444; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
-
-    /* CONTENIDO */
-    .main-content { flex: 1; padding: 40px; overflow-y: auto; }
-    .header-titles h1 { font-size: 28px; color: #0f172a; font-weight: 800; margin-bottom: 5px; }
-    .header-titles p { color: #64748b; font-size: 15px; }
-
-    .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 30px; margin-top: 30px; }
-    .premium-card { background: white; border-radius: 24px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); border: 1px solid #f1f5f9; }
-    .premium-card h3 { font-size: 18px; font-weight: 700; color: var(--primary); }
+    /* =========================================
+       ESTILOS ESPECÍFICOS DE CONFIGURACIÓN
+       ========================================= */
+    .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 30px; }
+    .premium-card { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 1px solid #f1f5f9; }
+    .premium-card h3 { font-size: 18px; font-weight: 700; color: #0b1527; margin: 0; }
 
     /* FORMULARIOS */
     .form-group-admin label { display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 8px; }
     .admin-input { width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; outline: none; transition: 0.3s; background: #f8fafc; }
-    .admin-input:focus { border-color: var(--accent); background: white; box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.05); }
+    .admin-input:focus { border-color: #f59e0b; background: white; box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.05); }
 
     .row-flex { display: flex; gap: 15px; }
     .w-50 { width: 50%; }
+    .w-100 { width: 100%; }
     .mt-3 { margin-top: 15px; }
     .mt-4 { margin-top: 25px; }
+    .pt-3 { padding-top: 15px; }
 
-    /* BOTONES */
-    .btn-save-settings { width: 100%; background: var(--primary); color: white; padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: 0.3s; }
-    .btn-save-settings:hover { background: var(--accent); color: var(--primary); }
+    /* BOTONES INTERNOS */
+    .btn-save-settings { width: 100%; background: #0b1527; color: white; padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: 0.3s; }
+    .btn-save-settings:hover { background: #f59e0b; color: #0b1527; }
 
-    .btn-add-user { width: 100%; background: white; color: var(--primary); border: 2px solid var(--primary); padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.3s; }
-    .btn-add-user:hover { background: var(--primary); color: white; }
+    .btn-add-user { width: 100%; background: white; color: #0b1527; border: 2px solid #0b1527; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.3s; }
+    .btn-add-user:hover { background: #0b1527; color: white; }
 
-    /* ALERTAS */
+    /* ALERTAS E INFO */
     .alert-success-premium { background: #f0fdf4; border-left: 5px solid #16a34a; padding: 15px 20px; border-radius: 12px; color: #166534; font-weight: 600; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
     .close-alert { background: none; border: none; cursor: pointer; color: #166534; font-size: 18px; }
 
-    /* INFO BOX */
     .server-info-box { background: #f8fafc; padding: 15px; border-radius: 14px; border: 1px solid #e2e8f0; }
-    .info-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 13px; }
-    .dot-online { width: 8px; height: 8px; background: #16a34a; border-radius: 50%; margin-right: 8px; }
+    .info-row { display: flex; align-items: center; font-size: 13px; gap: 8px;}
+    .dot-online { width: 10px; height: 10px; background: #10b981; border-radius: 50%; display: inline-block; }
     .badge-security { background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; }
 </style>
