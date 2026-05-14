@@ -409,3 +409,129 @@
         transform: rotate(360deg);
     }
 }
+/* =========================================
+   SIDEBAR GLOBAL PREMIUM - FERREAPP
+   ========================================= */
+.admin-layout {
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background: #f5f7fa;
+}
+
+.sidebar {
+    width: 280px;
+    min-width: 280px;
+    background: #0b1527;
+    color: white;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000; /* Asegura que el menú siempre esté por encima */
+}
+
+    .sidebar.oculto {
+        margin-left: -280px;
+    }
+
+    .sidebar .logo {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        margin-bottom: 40px;
+    }
+
+    .sidebar .logo-icon {
+        background: #f59e0b;
+        width: 55px;
+        height: 55px;
+        border-radius: 14px;
+        font-size: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+    }
+
+    .sidebar .logo h2 {
+        font-size: 24px;
+        margin: 0;
+        color: white;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    .sidebar .logo span {
+        font-size: 11px;
+        color: #f59e0b;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        display: block;
+    }
+
+    .sidebar .menu {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex-grow: 1;
+    }
+
+    .sidebar .menu-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px 18px;
+        color: #94a3b8 !important;
+        text-decoration: none !important;
+        border-radius: 12px;
+        transition: 0.3s;
+        font-size: 14px !important;
+        font-weight: 500;
+        position: relative;
+    }
+
+        .sidebar .menu-item:hover {
+            color: white !important;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .sidebar .menu-item.active {
+            background: rgba(245, 158, 11, 0.1) !important;
+            color: #f59e0b !important;
+            font-weight: 700;
+        }
+
+            .sidebar .menu-item.active::before {
+                content: "";
+                position: absolute;
+                left: 0;
+                width: 4px;
+                height: 50%;
+                background: #f59e0b;
+                border-radius: 0 4px 4px 0;
+            }
+
+    .sidebar .logout-btn {
+        margin-top: auto;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #fca5a5;
+        padding: 14px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.3s;
+        width: 100%;
+        text-align: center;
+    }
+
+        .sidebar .logout-btn:hover {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
